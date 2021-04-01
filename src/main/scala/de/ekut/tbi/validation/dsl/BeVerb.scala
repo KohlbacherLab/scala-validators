@@ -23,6 +23,12 @@ sealed trait BeValidator[E,T] extends Validator[E,T]
 sealed trait BeVerb
 {
 
+  def apply[T](ref: T): BeValidator[String,T] =
+    new BeValidator[String,T]{
+      def apply(t: T) = condNel(t == ref, t, s"$t is not $ref")
+    }
+
+
 
   def apply(defined: DefinedWord) =
     new BeClause[DefinedWord#Constraint]{
@@ -35,6 +41,11 @@ sealed trait BeVerb
       def apply[T: Constraint] = nw.apply[T]
     }
 
+
+  def apply[E,T](nv: OrderedValidator[E,T]): BeValidator[E,T] = 
+    new BeValidator[E,T]{
+      def apply(t: T) = nv(t)
+    }
 
   def apply[E,T](nv: NumericValidator[E,T]): BeValidator[E,T] = 
     new BeValidator[E,T]{

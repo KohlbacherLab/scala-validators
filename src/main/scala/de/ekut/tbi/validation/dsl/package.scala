@@ -23,7 +23,7 @@ package object dsl
 
 
 
-  implicit class ValidationSyntax[T](val t: T) extends AnyVal
+  implicit class ValidationOps[T](val t: T) extends AnyVal
   {
 
     def must[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]) =
@@ -37,6 +37,9 @@ package object dsl
     def must[E](be: BeValidator[E,T]) = be(t)
 
 
+    def must(matchRegex: RegexValidator)(implicit str: T =:= String) = matchRegex(t)
+
+
     def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
       containClause.apply[T].apply(t)
 
@@ -44,6 +47,14 @@ package object dsl
 
   }
 
+/*
+  implicit class StringValidationOps(val s: String) extends AnyVal
+  {
+
+    def must(matchRegex: RegexValidator) = matchRegex(s)
+
+  }
+*/
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
   {
@@ -54,8 +65,11 @@ package object dsl
 
   implicit class ValidatedOps[E,T](val v: ValidatedNel[E,T]) extends AnyVal
   {
-    def otherwise[EE](err: EE) =
+    def otherwise[EE](err: => EE) =
       v.leftMap(_ => NonEmptyList.one(err))
+
+    def orError[EE](err: => EE) = otherwise(err)
+
   }
 
 

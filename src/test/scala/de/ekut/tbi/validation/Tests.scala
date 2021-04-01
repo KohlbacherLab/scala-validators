@@ -1,6 +1,10 @@
 package de.ekut.tbi.validation
 
 
+
+import java.util.UUID.randomUUID
+import java.time.LocalDate
+
 import org.scalatest.flatspec.AnyFlatSpec
 
 import de.ekut.tbi.validation.dsl._
@@ -34,6 +38,8 @@ class Tests extends AnyFlatSpec
     assert((4 must be (positive)).isValid)
 
     assert((4 must be (equalTo (4))).isValid)
+
+    assert((4 must be (4)).isValid)
   }
 
 
@@ -50,5 +56,26 @@ class Tests extends AnyFlatSpec
      assert((1 to 10).toList.validateEach.isValid)
 
   }
+
+
+  "Patient Validation" must "work as expected" in {
+
+     val patient =
+       Patient(randomUUID,Some(Gender.Other),Some(LocalDate.now.minusYears(42)),"Max Mustermensch")
+
+     assert(validate(patient).isValid)
+
+
+
+     val validation2 =
+       validate(Patient(randomUUID,None,Some(LocalDate.now),""))
+
+
+     validation2.leftMap(_.toList.tapEach(println))
+
+     assert(validation2.isInvalid)
+
+  }
+
 
 }

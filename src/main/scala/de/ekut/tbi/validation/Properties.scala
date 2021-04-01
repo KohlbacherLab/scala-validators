@@ -52,7 +52,7 @@ object CanBeEmpty
 {
   def apply[T](implicit cbd: CanBeEmpty[T]) = cbd
 
-  implicit def hasMethodIsEmpty[T <: AnyRef { def isEmpty: Boolean }]: CanBeEmpty[T] =
+  implicit def hasIsEmpty[T <: AnyRef { def isEmpty: Boolean }]: CanBeEmpty[T] =
     new CanBeEmpty[T]{
 
       import scala.language.reflectiveCalls
@@ -60,6 +60,16 @@ object CanBeEmpty
       def isEmpty(t: T) = t.asInstanceOf[{ def isEmpty: Boolean }].isEmpty
 
     }
+
+  implicit def hasParameterlessIsEmpty[T <: AnyRef { def isEmpty(): Boolean }]: CanBeEmpty[T] =
+    new CanBeEmpty[T]{
+
+      import scala.language.reflectiveCalls
+
+      def isEmpty(t: T) = t.asInstanceOf[{ def isEmpty(): Boolean }].isEmpty()
+
+    }
+
 }
 
 
