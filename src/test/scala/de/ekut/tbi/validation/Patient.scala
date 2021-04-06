@@ -37,9 +37,7 @@ object Patient
       case pat @ Patient(id,gender,birthDate,name) =>
         (
           gender must be (defined),
-          birthDate must be (defined) andThen (
-            _.get must be (before (LocalDate.now))
-          ),
+          birthDate must be (defined) andThen (_.get must be (before (LocalDate.now))),
           name must be (nonEmpty),
 
         )

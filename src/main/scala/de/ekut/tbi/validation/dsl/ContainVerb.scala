@@ -37,6 +37,19 @@ object allOf
 }
 
 
+sealed trait OnlyWord[U]
+{
+  val value: U
+}
+
+object only
+{
+  def apply[U](u: U): OnlyWord[U] = {
+    new OnlyWord[U]{ val value = u }
+  }
+}
+
+
 sealed trait ContainClause[U] extends ValidatorBuilder[String,({ type CanContainT[x] = CanContain[U,x]})#CanContainT]
 
 
@@ -71,6 +84,16 @@ sealed trait ContainVerb
         )
     }
   }
+
+  def apply[U](only: OnlyWord[U]): ContainClause[U] = {
+    new ContainClause[U]{
+      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
+        Validator(
+          t => condNel(cc.containsOnly(t)(only.value), t , s"$t does not contain only ${only.value}")
+        )
+    }
+  }
+
 
 /*
 

@@ -21,10 +21,21 @@ package object dsl
   def validateEach[T,E,C[T]: Traverse](ts: C[T])(implicit v: Validator[E,T]) =
     ts.traverse(v)
 
+  
+  import scala.language.implicitConversions
 
 
+  implicit def toMustVerb[T](t: T): MustVerb[T] = new MustVerb(t)
+
+
+  def all[T,C[T]: Traverse](ts: C[T]) = new MustVerbTraversable(ts)
+
+
+/*
   implicit class ValidationOps[T](val t: T) extends AnyVal
   {
+
+    def must = new MustVerb(t)
 
     def must[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]) =
       clause.apply[T].apply(t)
@@ -46,6 +57,8 @@ package object dsl
     def validate[E](implicit validator: Validator[E,T]) = validator(t)
 
   }
+*/
+
 
 /*
   implicit class StringValidationOps(val s: String) extends AnyVal
@@ -55,6 +68,7 @@ package object dsl
 
   }
 */
+
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
   {

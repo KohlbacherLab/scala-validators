@@ -2,6 +2,7 @@ package de.ekut.tbi.validation.dsl
 
 
 
+import cats.data.ValidatedNel
 import cats.data.Validated.condNel
 
 import de.ekut.tbi.validation.{
@@ -18,7 +19,21 @@ sealed trait BeClause[Constraint[_]] extends ValidatorBuilder[String,Constraint]
 
 
 sealed trait BeValidator[E,T] extends Validator[E,T]
+/*
+object BeValidator
+{
+  def apply[E,T](f: T => ValidatedNel[E,T]): BeValidator[E,T] =
+    new BeValidator[E,T]{
+      def apply(t: T) = f(t)
+    }
 
+  def apply[E,T](
+    f: T => Boolean,
+    error: T => E
+  ): BeValidator[E,T] =
+    apply(t => condNel(f(t), t, error(t)))
+}
+*/
 
 sealed trait BeVerb
 {
@@ -41,7 +56,7 @@ sealed trait BeVerb
       def apply[T: Constraint] = nw.apply[T]
     }
 
-
+/*
   def apply[E,T](nv: OrderedValidator[E,T]): BeValidator[E,T] = 
     new BeValidator[E,T]{
       def apply(t: T) = nv(t)
@@ -50,6 +65,12 @@ sealed trait BeVerb
   def apply[E,T](nv: NumericValidator[E,T]): BeValidator[E,T] = 
     new BeValidator[E,T]{
       def apply(t: T) = nv(t)
+    }
+*/
+
+  def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = 
+    new BeValidator[E,T]{
+      def apply(t: T) = v(t)
     }
 
 
