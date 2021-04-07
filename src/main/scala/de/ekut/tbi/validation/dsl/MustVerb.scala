@@ -17,18 +17,15 @@ import de.ekut.tbi.validation.{
 sealed trait MustOps[T,R]
 {
 
-  def must[E](v: Validator[E,T]): ValidatedNel[E,R]
-
-  def must[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]): ValidatedNel[E,R]
-
-/*
-  def must[Constraint[_]](beClause: BeClause[Constraint])(implicit constraint: Constraint[T]): ValidatedNel[String,R]
+  def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[String,R]
 
   def must[E](be: BeValidator[E,T]): ValidatedNel[E,R]
 
-  def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]): ValidatedNel[String,R]
-*/
+//  def must(matchRegex: Validator[String,String])(implicit str: T =:= String): ValidatedNel[String,R]
 
+  def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]): ValidatedNel[String,R]
+
+  def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]): ValidatedNel[String,R]
 }
 
 
@@ -36,13 +33,7 @@ sealed trait MustOps[T,R]
 final class MustVerb[T](val t: T) extends MustOps[T,T]
 {
 
-  override def must[E](v: Validator[E,T]) = v(t)
-
-  override def must[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]) =
-    clause.apply[T].apply(t)
-
-/*
-  override def must[Constraint[_]](beClause: BeClause[Constraint])(implicit constraint: Constraint[T]) =
+  override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) =
     beClause.apply[T].apply(t)
 
 
@@ -54,7 +45,10 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
 
   override def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
     containClause.apply[T].apply(t)
-*/
+
+  override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
+    clause.apply[T].apply(t)
+
 }
 
 
@@ -62,14 +56,7 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
 final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends MustOps[T,C[T]]
 {
 
-  override def must[E](v: Validator[E,T]) = ts.traverse(v)
-
-
-  override def must[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]) =
-    ts.traverse(clause.apply[T])
-
-/*
-  override def must[Constraint[_]](beClause: BeClause[Constraint])(implicit constraint: Constraint[T]) =
+  override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) =
     ts.traverse(beClause.apply[T])
 
 
@@ -83,31 +70,9 @@ final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) ext
 
   override def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
     ts.traverse(containClause.apply[T])
-*/
-}
 
 
-
-/*
-final class MustVerb[T](val t: T) extends AnyVal
-{
-
-  def apply[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]) =
-    clause.apply[T].apply(t)
-
-
-  def apply[Constraint[_]](beClause: BeClause[Constraint])(implicit constraint: Constraint[T]) =
-    beClause.apply[T].apply(t)
-
-
-  def apply[E](be: BeValidator[E,T]) = be(t)
-
-
-  def apply(matchRegex: RegexValidator)(implicit str: T =:= String) = matchRegex(t)
-
-
-  def apply[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
-    containClause.apply[T].apply(t)
+  override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
+    ts.traverse(clause.apply[T])
 
 }
-*/

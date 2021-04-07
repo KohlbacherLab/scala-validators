@@ -12,6 +12,9 @@ import de.ekut.tbi.validation.{
 
 
 sealed trait EmptyWord extends ValidatorBuilder[String,CanBeEmpty]
+{
+  type Type = EmptyWord
+}
 
 final case object empty extends EmptyWord
 {
@@ -22,9 +25,8 @@ final case object empty extends EmptyWord
       t => s"$t is not empty",
       t => s"$t is empty"
     )
-//    Validator(
-//      t => condNel(cbe.isEmpty(t), t , s"$t is not empty")
-//    )
+
+  def negated = nonEmpty
 }
 
 
@@ -32,8 +34,7 @@ final case object nonEmpty extends EmptyWord
 {
   def apply[T](implicit cbe: CanBeEmpty[T]): Validator[String,T] =
     empty.apply[T].negated
-//    Validator(
-//      t => condNel(!cbe.isEmpty(t), t , s"$t is empty")
-//    )
+
+  def negated = empty
 }
 

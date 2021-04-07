@@ -142,7 +142,7 @@ object CanContain
 
 
 trait CanHaveSize[-C]{
-  def apply(c: C)(size: Int): Boolean
+  def hasSize(c: C)(size: Int): Boolean
 }
 
 object CanHaveSize
@@ -155,14 +155,14 @@ object CanHaveSize
 
       import scala.language.reflectiveCalls
 
-      def apply(c: C)(size: Int) =
+      def hasSize(c: C)(size: Int) =
         c.asInstanceOf[{ def size: Int }].size == size
 
     }
 
   implicit def charSeqSize[Chars <: CharSequence]: CanHaveSize[Chars] =
     new CanHaveSize[Chars]{
-      def apply(chars: Chars)(size: Int): Boolean =
+      def hasSize(chars: Chars)(size: Int): Boolean =
         chars.length == size
     }
 

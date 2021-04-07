@@ -12,6 +12,16 @@ import de.ekut.tbi.validation.{
 
 
 sealed trait InWord[Us] extends ValidatorBuilder[String,({ type CanContainT[x] = CanContain[x,Us]})#CanContainT]
+{
+  self =>
+
+  type Type = InWord[Us]
+
+  def negated =
+    new InWord[Us]{
+      def apply[T: Constraint] = self.apply[T].negated
+    }
+}
 
 final object in
 {
@@ -25,7 +35,6 @@ final object in
           t => s"$t is not contained in $us",
           t => s"$t is contained in $us"
         )
-//        Validator(cc.contains(us)(_))(t => s"$t is not contained in $us")
     }
   
 }

@@ -13,7 +13,7 @@ trait Validator[E,T] extends (T => ValidatedNel[E,T])
 {
   self => 
 
-  type Sub <: Validator[E,T]
+  type Type <: Validator[E,T]
 
 /*
   def and(other: Validator[E,T]): Validator[E,T] = 
@@ -31,8 +31,7 @@ trait Validator[E,T] extends (T => ValidatedNel[E,T])
   def or(other: => Validator[E,T]): Validator[E,T] 
 */
 
-  def negated: Sub
-//  def negated: Validator[E,T]
+  def negated: Type
 
 }
 
@@ -40,7 +39,7 @@ trait Validator[E,T] extends (T => ValidatedNel[E,T])
 object Validator
 {
 
-  private final case class Impl[E,T]
+  final case class Impl[E,T]
   (
     f: T => Boolean,
     mustBeTrue: Boolean,
@@ -50,7 +49,7 @@ object Validator
   extends Validator[E,T]
   {
 
-    type Sub = Impl[E,T]
+    type Type = Impl[E,T]
 
     override def apply(t: T): ValidatedNel[E,T] = {
       if (mustBeTrue)

@@ -9,19 +9,21 @@ import de.ekut.tbi.validation.{
 
 sealed trait Negation
 {
-/*
-  def apply[E,T,V](v: V)(implicit isv: V <:< Validator[E,T]) = v.negated
-//  def apply[E,T, V <: Validator[E,T]](v: V): V#Sub = v.negated
 
-  def apply[E,Constraint[_]](vb: ValidatorBuilder[E,Constraint]): ValidatorBuilder[E,Constraint] =
+  def apply[E,T](validator: Validator[E,T]): validator.Type = validator.negated
+
+
+  def apply[E,Constraint[_]](vb: ValidatorBuilder[E,Constraint]): vb.Type =
     vb.negated
-*/
 
+
+  /*
   def apply[E,T](v: Validator[E,T]): Validator[E,T] =
     v.negated
 
   def apply[E,Constraint[_]](vb: ValidatorBuilder[E,Constraint]): ValidatorBuilder[E,Constraint] =
     vb.negated
+*/
 
 }
 

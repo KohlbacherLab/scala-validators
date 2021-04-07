@@ -13,7 +13,11 @@ trait ValidatorBuilder[E,C[_]]
 
   type Constraint[x] = C[x]
 
+  type Type <: ValidatorBuilder[E,C]
+
+
   def apply[T: Constraint]: Validator[E,T]
+
 
 /*
   def and(other: ValidatorBuilder[E,C]): ValidatorBuilder[E,C] =
@@ -32,10 +36,6 @@ trait ValidatorBuilder[E,C[_]]
     }
 */
 
-  def negated: ValidatorBuilder[E,C] =
-    new ValidatorBuilder[E,C]{
-      def apply[T: C]: Validator[E,T] = self.apply[T].negated
-    }
-
+  def negated: Type
 
 }

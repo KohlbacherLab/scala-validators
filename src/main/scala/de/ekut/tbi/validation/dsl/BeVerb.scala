@@ -31,38 +31,54 @@ object HasImplicitValidator
  
 
 sealed trait ValidWord extends ValidatorBuilder[String,HasImplicitValidator]
+{
+  type Type = ValidWord
+}
   
 final object valid extends ValidWord
 {
-  def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
+  override def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
+
+  override def negated = invalid
 }
 
 final object invalid extends ValidWord
 {
-  def apply[T](implicit hv: HasImplicitValidator[T]) = valid.apply[T].negated 
+  override def apply[T](implicit hv: HasImplicitValidator[T]) = valid.apply[T].negated 
+
+  override def negated = valid
 }
 
 
 
 
 
-sealed trait BeClause[Constraint[_]] extends ValidatorBuilder[String,Constraint]
+sealed trait BeClause[C[_]] extends ValidatorBuilder[String,C]
+{
+  self =>
+
+  type Type = BeClause[C]
+
+  def negated =
+    new BeClause[C]{
+      def apply[T: Constraint] = self.apply[T].negated
+    }
+}
 
 
-//sealed trait BeValidator[E,T] extends Validator[E,T]
 sealed trait BeValidator[E,T] extends Validator[E,T]
 {
-  type Sub = BeValidator[E,T]
+  type Type = BeValidator[E,T]
 }
 
 object BeValidator
 {
+
   private final case class Impl[E,T](v: Validator[E,T]) extends BeValidator[E,T]
   {
     override def apply(t: T) = v(t)
 
     override def negated = BeValidator(v.negated)
-//    override def negated = v.negated
   }
 
   def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = Impl(v)
@@ -71,6 +87,8 @@ object BeValidator
 
 sealed trait BeVerb
 {
+
+  self =>
 
   def apply(valid: ValidWord): BeClause[HasImplicitValidator] =
     new BeClause[HasImplicitValidator]{ 
@@ -87,38 +105,41 @@ sealed trait BeVerb
         t => s"$t is $ref"
       )
     )
-//    new BeValidator[String,T]{
-//      def apply(t: T) = condNel(t == ref, t, s"$t is not $ref")
-//    }
 
 
 
-  def apply(defined: DefinedWord) =
+  def apply(defined: DefinedWord): BeClause[DefinedWord#Constraint] =
     new BeClause[DefinedWord#Constraint]{
       def apply[T: DefinedWord#Constraint] = defined.apply[T]
     }
 
 
-  def apply[Constraint[_]](nw: NumericWord[Constraint]) =
+  def apply[Constraint[_]](nw: NumericWord[Constraint]): BeClause[Constraint] =
     new BeClause[Constraint]{ 
       def apply[T: Constraint] = nw.apply[T]
     }
 
 
+/*
+  def apply(v: IsInstanceValidator): BeClause[Unconstrained] = 
+    new BeClause[Unconstrained]{
+      def apply[T: Unconstrained] = v
+    }
+*/
+    
+
+
   def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = 
     BeValidator(v)
-//    new BeValidator[E,T]{
-//      def apply(t: T) = v(t)
-//    }
 
 
-  def apply(empty: EmptyWord) =
+  def apply(empty: EmptyWord): BeClause[EmptyWord#Constraint] =
     new BeClause[EmptyWord#Constraint]{
       def apply[T: EmptyWord#Constraint] = empty.apply[T]
     }
 
 
-  def apply[U](in: InWord[U]) =
+  def apply[U](in: InWord[U]): BeClause[InWord[U]#Constraint] =
     new BeClause[InWord[U]#Constraint]{
       def apply[T: InWord[U]#Constraint] = in.apply[T]
     } 

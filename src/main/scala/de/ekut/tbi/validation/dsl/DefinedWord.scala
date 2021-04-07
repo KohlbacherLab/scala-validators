@@ -12,7 +12,10 @@ import de.ekut.tbi.validation.{
 
 
 sealed trait DefinedWord extends ValidatorBuilder[String,CanBeDefined]
+{
+  type Type = DefinedWord
 
+}
 
 final case object defined extends DefinedWord
 {
@@ -23,9 +26,7 @@ final case object defined extends DefinedWord
       t => s"$t is not defined",
       t => s"$t is defined"
     )
-//    Validator(
-//      t => condNel(cbd.isDefined(t), t , s"$t is not defined")
-//    )
+  def negated = undefined
 }
 
 
@@ -33,9 +34,8 @@ final case object undefined extends DefinedWord
 {
   def apply[T](implicit cbd: CanBeDefined[T]): Validator[String,T] =
     defined.apply[T].negated
-//    Validator(
-//      t => condNel(!cbd.isDefined(t), t , s"$t is defined")
-//    )
+  
+  def negated = defined
 }
 
 
