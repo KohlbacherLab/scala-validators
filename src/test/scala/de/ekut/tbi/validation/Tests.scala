@@ -29,6 +29,8 @@ class Tests extends AnyFlatSpec
 
   "Validation DSL" must "work as expected" in {
 
+//    assert(Option(42) must be (a [Some[Int]]))
+
     assert(Some(42) must be (defined))
     
     assert(Some(42) must contain (42))
@@ -45,6 +47,8 @@ class Tests extends AnyFlatSpec
     assert(oneToTen must contain (anyOf (2,20,200)))
 
     assert(oneToTen must contain (allOf (2,5,7)))
+
+    assert(oneToTen must have (size (10)))
 
     assert(4 must be (in (oneToTen)))
 
