@@ -58,9 +58,13 @@ sealed trait ContainVerb
 
   def apply[U](u: U): ContainClause[U] = {
     new ContainClause[U]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          cc.contains(_)(u), t => s"$t does not contain $u"
+      def apply[T](implicit cc: CanContain[U,T]) =
+//        Validator[String,T](cc.contains(_)(u))(t => s"$t does not contain $u")
+        Validator[String,T](
+          cc.contains(_)(u)
+        )(
+          t => s"$t does not contain $u",
+          t => s"$t contains $u"
         )
     }
   }
@@ -69,8 +73,14 @@ sealed trait ContainVerb
   def apply[U](anyOf: AnyOfWord[U]): ContainClause[U] = {
     new ContainClause[U]{
       def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          t => condNel(cc.containsAnyOf(t)(anyOf.values), t , s"$t does not contain any element of ${anyOf.values}")
+//        Validator(
+//          t => condNel(cc.containsAnyOf(t)(anyOf.values), t , s"$t does not contain any element of ${anyOf.values}")
+//        )
+        Validator[String,T](
+          cc.containsAnyOf(_)(anyOf.values)
+        )(
+          t => s"$t does not contain any element of ${anyOf.values}",
+          t => s"$t contains some element of ${anyOf.values}"
         )
     }
   }
@@ -79,8 +89,14 @@ sealed trait ContainVerb
   def apply[U](allOf: AllOfWord[U]): ContainClause[U] = {
     new ContainClause[U]{
       def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          t => condNel(cc.containsAllOf(t)(allOf.values), t , s"$t does not contain all element of ${allOf.values}")
+//        Validator(
+//          t => condNel(cc.containsAllOf(t)(allOf.values), t , s"$t does not contain all element of ${allOf.values}")
+//        )
+        Validator[String,T](
+          cc.containsAllOf(_)(allOf.values)
+        )(
+          t => s"$t does not contain all elements of ${allOf.values}",
+          t => s"$t contains all elements of ${allOf.values}"
         )
     }
   }
@@ -88,48 +104,18 @@ sealed trait ContainVerb
   def apply[U](only: OnlyWord[U]): ContainClause[U] = {
     new ContainClause[U]{
       def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          t => condNel(cc.containsOnly(t)(only.value), t , s"$t does not contain only ${only.value}")
+//        Validator(
+//          t => condNel(cc.containsOnly(t)(only.value), t , s"$t does not contain only ${only.value}")
+//        )
+        Validator[String,T](
+          cc.containsOnly(_)(only.value)
+        )(
+          t => s"$t does not contain only ${only.value}",
+          t => s"$t contains only ${only.value}"
         )
     }
   }
 
-
-/*
-
-  type Given[U] = { type CanContainT[x] = CanContain[U,x]}
-
-  def apply[U](u: U): ValidatorBuilder[Given[U]#CanContainT] = {
-    new ValidatorBuilder[Given[U]#CanContainT]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          t => condNel(cc.contains(t)(u), t , s"$t does not contain $u")
-        )
-    }
-  }
-
-
-  def apply[U](anyOf: AnyOfWord[U]): ValidatorBuilder[Given[U]#CanContainT] = {
-
-    new ValidatorBuilder[Given[U]#CanContainT]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          t => condNel(cc.containsAnyOf(t)(anyOf.values), t , s"$t does not contain any element of ${anyOf.values}")
-        )
-    }
-  }
-
-
-  def apply[U](allOf: AllOfWord[U]): ValidatorBuilder[Given[U]#CanContainT] = {
-
-    new ValidatorBuilder[Given[U]#CanContainT]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
-        Validator(
-          t => condNel(cc.containsAllOf(t)(allOf.values), t , s"$t does not contain all element of ${allOf.values}")
-        )
-    }
-  }
-*/
 
 }
 

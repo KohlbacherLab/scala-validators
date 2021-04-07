@@ -19,9 +19,13 @@ final object in
   def apply[Us](us: Us): InWord[Us] =
     new InWord[Us]{
       def apply[T](implicit cc: CanContain[T,Us]): Validator[String,T] =
-        Validator(
-          cc.contains(us)(_), t => s"$t is not contained in $us"
+        Validator[String,T](
+          cc.contains(us)(_)
+        )(
+          t => s"$t is not contained in $us",
+          t => s"$t is contained in $us"
         )
+//        Validator(cc.contains(us)(_))(t => s"$t is not contained in $us")
     }
   
 }

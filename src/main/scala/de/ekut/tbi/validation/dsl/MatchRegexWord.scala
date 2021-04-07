@@ -13,19 +13,18 @@ import de.ekut.tbi.validation.{
 
 
 
-
-sealed trait RegexValidator extends Validator[String,String]
-
-
 final object matchRegex
 {
 
-  def apply(regex: Regex): RegexValidator =
-    new RegexValidator {
-      def apply(t: String) = condNel(regex.matches(t), t , s"'$t' does not match regex '$regex'")
-    }
+  def apply(regex: Regex) =
+    Validator[String,String](
+      regex.matches(_)
+    )(
+      t => s"'$t' does not match regex '$regex'",
+      t => s"'$t' matches regex '$regex'"
+    )
 
-  def apply(pattern: String): RegexValidator = apply(pattern.r)
+  def apply(pattern: String): Validator[String,String] = apply(pattern.r)
 
 }
 

@@ -14,34 +14,82 @@ import de.ekut.tbi.validation.{
 }
 
 
+@annotation.implicitNotFound(
+  "Couldn't find implicit Validator for ${T}. Define one or ensure it is in scope"
+)
+trait HasImplicitValidator[T]{
+  val validator: Validator[String,T]
+}
+
+object HasImplicitValidator
+{
+  implicit def apply[T](implicit v: Validator[String,T]): HasImplicitValidator[T] =
+    new HasImplicitValidator[T]{
+      val validator = v
+    }
+}
+ 
+
+sealed trait ValidWord extends ValidatorBuilder[String,HasImplicitValidator]
+  
+final object valid extends ValidWord
+{
+  def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
+}
+
+final object invalid extends ValidWord
+{
+  def apply[T](implicit hv: HasImplicitValidator[T]) = valid.apply[T].negated 
+}
+
+
+
+
 
 sealed trait BeClause[Constraint[_]] extends ValidatorBuilder[String,Constraint]
 
 
+//sealed trait BeValidator[E,T] extends Validator[E,T]
 sealed trait BeValidator[E,T] extends Validator[E,T]
-/*
+{
+  type Sub = BeValidator[E,T]
+}
+
 object BeValidator
 {
-  def apply[E,T](f: T => ValidatedNel[E,T]): BeValidator[E,T] =
-    new BeValidator[E,T]{
-      def apply(t: T) = f(t)
-    }
+  private final case class Impl[E,T](v: Validator[E,T]) extends BeValidator[E,T]
+  {
+    override def apply(t: T) = v(t)
 
-  def apply[E,T](
-    f: T => Boolean,
-    error: T => E
-  ): BeValidator[E,T] =
-    apply(t => condNel(f(t), t, error(t)))
+    override def negated = BeValidator(v.negated)
+//    override def negated = v.negated
+  }
+
+  def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = Impl(v)
 }
-*/
+
 
 sealed trait BeVerb
 {
 
-  def apply[T](ref: T): BeValidator[String,T] =
-    new BeValidator[String,T]{
-      def apply(t: T) = condNel(t == ref, t, s"$t is not $ref")
+  def apply(valid: ValidWord): BeClause[HasImplicitValidator] =
+    new BeClause[HasImplicitValidator]{ 
+      def apply[T: HasImplicitValidator] = valid.apply[T]
     }
+
+
+  def apply[T](ref: T): BeValidator[String,T] =
+    BeValidator(
+      Validator[String,T](
+        _ == ref
+      )(
+        t => s"$t is not $ref",
+        t => s"$t is $ref"
+      )
+    )
+//    new BeValidator[String,T]{
+//      def apply(t: T) = condNel(t == ref, t, s"$t is not $ref")
+//    }
 
 
 
@@ -56,22 +104,12 @@ sealed trait BeVerb
       def apply[T: Constraint] = nw.apply[T]
     }
 
-/*
-  def apply[E,T](nv: OrderedValidator[E,T]): BeValidator[E,T] = 
-    new BeValidator[E,T]{
-      def apply(t: T) = nv(t)
-    }
-
-  def apply[E,T](nv: NumericValidator[E,T]): BeValidator[E,T] = 
-    new BeValidator[E,T]{
-      def apply(t: T) = nv(t)
-    }
-*/
 
   def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = 
-    new BeValidator[E,T]{
-      def apply(t: T) = v(t)
-    }
+    BeValidator(v)
+//    new BeValidator[E,T]{
+//      def apply(t: T) = v(t)
+//    }
 
 
   def apply(empty: EmptyWord) =

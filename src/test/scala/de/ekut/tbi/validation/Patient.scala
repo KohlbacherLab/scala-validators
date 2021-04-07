@@ -31,6 +31,19 @@ object Patient
   import de.ekut.tbi.validation.dsl._
 
 
+  implicit val validator: Validator[String,Patient] =
+    {
+      case pat @ Patient(id,gender,birthDate,name) =>
+        (
+          gender must be (defined),
+          birthDate must be (defined) andThen (_.get must be (before (LocalDate.now))),
+          name must be (nonEmpty),
+
+        )
+        .mapN { case _: Product => pat }
+    }
+
+/*
   implicit val validator =
     Validator[String,Patient]{
 
@@ -44,6 +57,6 @@ object Patient
         .mapN { case _: Product => pat }
 
     }
-
+*/
 
 }

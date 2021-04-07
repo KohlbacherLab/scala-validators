@@ -17,18 +17,25 @@ sealed trait DefinedWord extends ValidatorBuilder[String,CanBeDefined]
 final case object defined extends DefinedWord
 {
   def apply[T](implicit cbd: CanBeDefined[T]): Validator[String,T] =
-    Validator(
-      t => condNel(cbd.isDefined(t), t , s"$t is not defined")
+    Validator[String,T](
+      cbd.isDefined(_)
+    )(
+      t => s"$t is not defined",
+      t => s"$t is defined"
     )
+//    Validator(
+//      t => condNel(cbd.isDefined(t), t , s"$t is not defined")
+//    )
 }
 
 
 final case object undefined extends DefinedWord
 {
   def apply[T](implicit cbd: CanBeDefined[T]): Validator[String,T] =
-    Validator(
-      t => condNel(!cbd.isDefined(t), t , s"$t is defined")
-    )
+    defined.apply[T].negated
+//    Validator(
+//      t => condNel(!cbd.isDefined(t), t , s"$t is defined")
+//    )
 }
 
 
