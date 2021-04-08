@@ -21,6 +21,12 @@ sealed trait NumericWord[C[_]] extends ValidatorBuilder[String,C]
     new NumericWord[C]{
       def apply[T: C] = self.apply[T].negated
     }
+
+  def or(other: => Type) =
+    new NumericWord[C]{
+      def apply[T: C] =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
 }
 
 

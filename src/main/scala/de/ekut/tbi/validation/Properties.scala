@@ -3,18 +3,13 @@ package de.ekut.tbi.validation
 
 import cats.data.Validated.condNel
 
-import shapeless.{
-  <:!<
-}
-
-
 
 
 sealed trait Unconstrained[-T]
 
 object Unconstrained
 {
-  def apply[T] = new Unconstrained[T]{}
+  implicit def apply[T] = new Unconstrained[T]{}
 }
 
 

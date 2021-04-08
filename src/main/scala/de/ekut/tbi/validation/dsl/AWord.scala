@@ -12,39 +12,43 @@ import de.ekut.tbi.validation.{
 }
 
 
-sealed trait IsInstanceValidator extends Validator[String,Any]
+
+sealed trait IsInstanceClause[U] extends ValidatorBuilder[String,Unconstrained]
 {
-  type Type = IsInstanceValidator
+  self =>
+
+  type Type = IsInstanceClause[U]
+
+  def negated =
+    new IsInstanceClause[U]{
+      def apply[T: Constraint] = self.apply[T].negated
+    }
+
+  def or(other: => Type) =
+    new IsInstanceClause[U]{
+      def apply[T: Constraint] =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
 }
-
-object IsInstanceValidator
-{
-  private final case class Impl(v: Validator[String,Any]) extends IsInstanceValidator 
-  {
-    def apply(t: Any) = v(t) 
-    def negated = Impl(v.negated)
-  }
-
-  private[dsl] def apply[T](ct: ClassTag[T]): IsInstanceValidator =
-    Impl(
-      Validator[String,Any](
-        ct.unapply(_).isDefined
-      )(
-        t => s"$t is not an instance of ${ct.runtimeClass.getName}",
-        t => s"$t is an instance of ${ct.runtimeClass.getName}"
-      )
-    )
-
-}
-
 
 
 sealed trait AWord
 {
-  def apply[T](implicit ct: ClassTag[T]): IsInstanceValidator =
-    IsInstanceValidator(ct)
+
+  def apply[U](implicit ct: ClassTag[U]): IsInstanceClause[U] =
+    new IsInstanceClause[U]{
+      def apply[T: Unconstrained] =
+        Validator[String,T](
+          ct.unapply(_).isDefined
+        )(
+          t => s"$t is not an instance of ${ct.runtimeClass.getName}",
+          t => s"$t is an instance of ${ct.runtimeClass.getName}"
+        )
+    }
+
 }
 
 
 final object a extends AWord
+
 

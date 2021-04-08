@@ -9,6 +9,7 @@ import de.ekut.tbi.validation.{
   CanBeDefined,
   CanBeEmpty,
   CanContain,
+  Unconstrained,
   Validator,
   ValidatorBuilder
 }
@@ -32,14 +33,38 @@ object HasImplicitValidator
 
 sealed trait ValidWord extends ValidatorBuilder[String,HasImplicitValidator]
 {
+  self =>
+
   type Type = ValidWord
+
+  def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
+
+  def negated =
+    new ValidWord {   
+      override def apply[T](implicit h: HasImplicitValidator[T]): Validator[String,T] = h.validator.negated
+      override def negated = self
+    }
+  
+  def or(other: => Type) =
+    new ValidWord {   
+      override def apply[T: HasImplicitValidator]: Validator[String,T] =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+  
+    
 }
   
+final object valid extends ValidWord
+
+/*
 final object valid extends ValidWord
 {
   override def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
 
   override def negated = invalid
+  
+  def or(other: => Type) =
+
 }
 
 final object invalid extends ValidWord
@@ -47,8 +72,9 @@ final object invalid extends ValidWord
   override def apply[T](implicit hv: HasImplicitValidator[T]) = valid.apply[T].negated 
 
   override def negated = valid
-}
 
+}
+*/
 
 
 
@@ -62,6 +88,12 @@ sealed trait BeClause[C[_]] extends ValidatorBuilder[String,C]
   def negated =
     new BeClause[C]{
       def apply[T: Constraint] = self.apply[T].negated
+    }
+
+  def or(other: => Type) =
+    new BeClause[C]{
+      def apply[T: Constraint] = 
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
     }
 }
 
@@ -120,12 +152,12 @@ sealed trait BeVerb
     }
 
 
-/*
-  def apply(v: IsInstanceValidator): BeClause[Unconstrained] = 
+
+  def apply[U](v: IsInstanceClause[U]): BeClause[Unconstrained] = 
     new BeClause[Unconstrained]{
-      def apply[T: Unconstrained] = v
+      def apply[T: Unconstrained] = v.apply[T]
     }
-*/
+
     
 
 

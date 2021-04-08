@@ -36,6 +36,9 @@ trait ValidatorBuilder[E,C[_]]
     }
 */
 
+  def or(other: => Type): Type
+
+
   def negated: Type
 
 }

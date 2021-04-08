@@ -31,6 +31,12 @@ package object dsl
   def all[T,C[T]: Traverse](ts: C[T]) = new MustVerbTraversable(ts)
 
 
+  final val undefined = not (defined)
+
+  final val nonEmpty = not (empty)
+
+  final val invalid = not (valid)
+
 /*
   implicit class ValidationOps[T](val t: T) extends AnyVal
   {

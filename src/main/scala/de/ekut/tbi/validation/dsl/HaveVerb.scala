@@ -24,6 +24,15 @@ object size
   }
 }
 
+object length
+{
+  def apply(l: Int): SizeWord = {
+    new SizeWord{ val value = l }
+  }
+}
+
+
+
 
 sealed trait HaveClause[C[_]] extends ValidatorBuilder[String,C]
 {
@@ -35,6 +44,14 @@ sealed trait HaveClause[C[_]] extends ValidatorBuilder[String,C]
     new HaveClause[C]{
       def apply[T: Constraint] = self.apply[T].negated
     }
+
+  def or(other: => Type) =
+    new HaveClause[C]{
+      def apply[T: Constraint] =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+
+    
 }
 
 

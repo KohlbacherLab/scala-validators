@@ -21,6 +21,13 @@ sealed trait InWord[Us] extends ValidatorBuilder[String,({ type CanContainT[x] =
     new InWord[Us]{
       def apply[T: Constraint] = self.apply[T].negated
     }
+
+  def or(other: => Type) =
+    new InWord[Us]{
+      def apply[T: Constraint] =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+
 }
 
 final object in

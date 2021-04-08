@@ -7,6 +7,7 @@ import cats.data.Validated.condNel
 import cats.syntax.apply._
 import cats.instances.list._
 
+//import shapeless.{=:!=}
 
 
 trait Validator[E,T] extends (T => ValidatedNel[E,T])
@@ -60,9 +61,7 @@ object Validator
 
 //    override def and(other: Validator[E,T]): Validator[E,T] = ??? 
     
-    
 //    override def or(other: => Validator[E,T]): Validator[E,T] = ???
-
 
     override def negated: Impl[E,T] = copy(mustBeTrue = !mustBeTrue)
 //    override def negated: Validator[E,T] = copy(mustBeTrue = !mustBeTrue)
@@ -71,14 +70,50 @@ object Validator
 
 
   import scala.language.implicitConversions
+/*
+  implicit def fromValidation[T](
+    f: T => ValidatedNel[String,T]
+  ): Validator[String,T] =
+    new Validator[String,T]{ self =>
 
-  implicit def fromValidation[E,T](
-    f: T => ValidatedNel[E,T]
-  ): Validator[E,T] =
-    new Validator[E,T]{
+      type Type = Validator[String,T]
+
       def apply(t: T) = f(t)
 
-      def negated = ???
+      def negated =
+        new Validator[String,T]{
+          type Type = Validator[String,T]
+          def apply(tt: T) =
+            condNel(!f(tt).isValid, tt, s"$tt should not have been valid")
+
+          def negated = self
+        }
+
+    }
+*/
+
+  implicit def fromValidationE[E,T](
+    f: T => ValidatedNel[E,T]
+  )(
+    implicit
+//    errorNotString: E =:!= String,
+    toError: String => E
+  ): Validator[E,T] =
+    new Validator[E,T]{ self =>
+
+      type Type = Validator[E,T]
+
+      def apply(t: T) = f(t)
+
+      def negated =
+        new Validator[E,T]{
+          type Type = Validator[E,T]
+          def apply(tt: T) =
+            condNel(!f(tt).isValid, tt, toError(s"$tt should not have been valid"))
+
+          def negated = self
+        }
+
     }
 
 
@@ -87,7 +122,6 @@ object Validator
   ): Validator[String,T] =
     Impl(f,true,t => s"$t does not pass validation",t => s"$t passes validation")
     
-
 
   def apply[T](
     f: T => Boolean
@@ -106,24 +140,5 @@ object Validator
     Impl(f,true,error,errorWhenNegated)
   
   
-
-
-/*
-  def apply[E,T](v: T => ValidatedNel[E,T]): Validator[E,T] =
-    new Validator[E,T]{
-      def apply(t: T) = v(t)
-    }
-
-
-  def apply[E,T](
-    f: T => Boolean
-  )(
-    error: T => E
-  ): Validator[E,T] =
-    Validator(t => condNel(f(t), t, error(t)) )
-
-*/
-
-
 
 }

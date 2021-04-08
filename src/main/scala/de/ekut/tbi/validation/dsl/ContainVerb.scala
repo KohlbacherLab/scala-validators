@@ -60,6 +60,14 @@ sealed trait ContainClause[U] extends ValidatorBuilder[String,({ type CanContain
     new ContainClause[U]{
       def apply[T](implicit cc: CanContain[U,T]) = self.apply[T].negated
     }
+
+  override def or(other: => Type) =
+    new ContainClause[U]{
+      def apply[T](implicit cc: CanContain[U,T]) =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t) 
+    }
+
+
 }
 
 sealed trait ContainVerb

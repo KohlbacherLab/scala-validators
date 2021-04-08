@@ -32,30 +32,25 @@ object Patient
 
 
   implicit val validator: Validator[String,Patient] =
+    patient =>
+      (
+        patient.gender must be (defined) otherwise ("gender not defined"),
+        patient.birthDate must be (defined) andThen (_.get must be (before (LocalDate.now))),
+        patient.name must not (be (empty)),
+      )
+      .mapN { case _: Product => patient }
+    
+
+/*
+  implicit val validator: Validator[String,Patient] =
     {
       case pat @ Patient(id,gender,birthDate,name) =>
         (
-          gender must be (defined),
+          gender must be (defined) otherwise ("gender not defined"),
           birthDate must be (defined) andThen (_.get must be (before (LocalDate.now))),
-          name must be (nonEmpty),
-
+          name must not (be (empty)),
         )
         .mapN { case _: Product => pat }
-    }
-
-/*
-  implicit val validator =
-    Validator[String,Patient]{
-
-      case pat @ Patient(id,gender,birthDate,name) =>
-        (
-          gender must be (defined),
-          birthDate must be (defined) andThen (_.get must be (before (LocalDate.now))),
-          name must be (nonEmpty),
-
-        )
-        .mapN { case _: Product => pat }
-
     }
 */
 

@@ -3,7 +3,7 @@ package de.ekut.tbi.validation
 
 
 import java.util.UUID.randomUUID
-import java.time.LocalDate
+import java.time._
 
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -29,13 +29,15 @@ class Tests extends AnyFlatSpec
 
   "Validation DSL" must "work as expected" in {
 
-//    assert(Option(42) must be (a [Some[Int]]))
+    assert(Option(42) must be (a [Some[Int]]))
+
+    assert(Option(42) must not (be (a [None.type])))
 
     assert(Some(42) must be (defined))
     
     assert(Some(42) must contain (42))
 
-//    assert(Some(42) must (contain (42) or contain(43)))
+    assert(Some(42) must (contain (42) or contain(43)))
 
     assert(None must be (undefined))
 
@@ -73,6 +75,33 @@ class Tests extends AnyFlatSpec
   }
 
 
+  "DateTime validations" must "work as expected" in {
+
+    assert(LocalDate.now.minusDays(1) must be (before (LocalDate.now)))
+    
+    assert(LocalDate.now.plusDays(1) must be (after (LocalDate.now)))
+
+  }
+
+
+  "String validations" must "work as expected" in {
+
+    val testString = "Test String"
+
+
+    assert(all(List(testString)) must have (length (11)))
+
+    assert(all(List(testString)) must contain ('e'))
+
+    assert(all(List(testString)) must contain (anyOf('a','e','i','o','u')))
+
+    assert(all(List(testString)) must contain (allOf('e','i')))
+
+    assert(all(List(testString)) must contain ("est"))
+  }
+
+
+
   "Patient Validation" must "work as expected" in {
 
      val patient =
@@ -86,13 +115,14 @@ class Tests extends AnyFlatSpec
 
      assert(validation2.isInvalid)
 
-//     assert(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid)))
+     assert(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid)))
 
      val patients = List(patient,patient,patient)
 
      assert(all(patients) must be (valid))
 
-     assert(all(List.empty[Patient]) must be (valid))
+     assert(all(patients) must not (be (invalid)))
+
 
   }
 
