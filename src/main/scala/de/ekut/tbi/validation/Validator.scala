@@ -4,10 +4,8 @@ package de.ekut.tbi.validation
 import cats.data.ValidatedNel
 import cats.data.Validated.condNel
 
-import cats.syntax.apply._
-import cats.instances.list._
-
-//import shapeless.{=:!=}
+//import cats.syntax.apply._
+//import cats.instances.list._
 
 
 trait Validator[E,T] extends (T => ValidatedNel[E,T])
@@ -15,15 +13,6 @@ trait Validator[E,T] extends (T => ValidatedNel[E,T])
   self => 
 
   type Type <: Validator[E,T]
-
-/*
-  def and(other: Validator[E,T]): Validator[E,T] = 
-    t => (self(t),other(t)).mapN((_,_) => t)
-
-
-  def or(other: => Validator[E,T]): Validator[E,T] = 
-    t => self(t) orElse other(t)
-*/
 
 /*
   def and(other: Validator[E,T]): Validator[E,T] 
@@ -64,7 +53,6 @@ object Validator
 //    override def or(other: => Validator[E,T]): Validator[E,T] = ???
 
     override def negated: Impl[E,T] = copy(mustBeTrue = !mustBeTrue)
-//    override def negated: Validator[E,T] = copy(mustBeTrue = !mustBeTrue)
 
   }
 
@@ -95,9 +83,7 @@ object Validator
   implicit def fromValidationE[E,T](
     f: T => ValidatedNel[E,T]
   )(
-    implicit
-//    errorNotString: E =:!= String,
-    toError: String => E
+    implicit toError: String => E
   ): Validator[E,T] =
     new Validator[E,T]{ self =>
 
@@ -107,9 +93,10 @@ object Validator
 
       def negated =
         new Validator[E,T]{
+
           type Type = Validator[E,T]
-          def apply(tt: T) =
-            condNel(!f(tt).isValid, tt, toError(s"$tt should not have been valid"))
+
+          def apply(tt: T) = condNel(!f(tt).isValid, tt, toError(s"$tt should not have been valid"))
 
           def negated = self
         }
@@ -120,7 +107,7 @@ object Validator
   def apply[T](
     f: T => Boolean
   ): Validator[String,T] =
-    Impl(f,true,t => s"$t does not pass validation",t => s"$t passes validation")
+    Impl(f,true,t => s"$t does not pass validation",t => s"$t passes validation although negated")
     
 
   def apply[T](

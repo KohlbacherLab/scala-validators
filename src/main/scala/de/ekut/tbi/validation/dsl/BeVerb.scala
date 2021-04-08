@@ -4,6 +4,8 @@ package de.ekut.tbi.validation.dsl
 
 import cats.data.ValidatedNel
 import cats.data.Validated.condNel
+import cats.syntax.apply._
+import cats.instances.list._
 
 import de.ekut.tbi.validation.{
   CanBeDefined,
@@ -51,6 +53,12 @@ sealed trait ValidWord extends ValidatorBuilder[String,HasImplicitValidator]
         t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
     }
   
+  def and(other: Type) =
+    new ValidWord {   
+      override def apply[T: HasImplicitValidator]: Validator[String,T] =
+        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
+    }
+  
     
 }
   
@@ -94,6 +102,12 @@ sealed trait BeClause[C[_]] extends ValidatorBuilder[String,C]
     new BeClause[C]{
       def apply[T: Constraint] = 
         t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+
+  def and(other: Type) =
+    new BeClause[C]{
+      def apply[T: Constraint] = 
+        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
     }
 }
 

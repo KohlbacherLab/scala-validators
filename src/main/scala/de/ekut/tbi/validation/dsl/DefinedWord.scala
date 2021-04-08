@@ -2,6 +2,8 @@ package de.ekut.tbi.validation.dsl
 
 
 import cats.data.Validated.condNel
+import cats.syntax.apply._
+import cats.instances.list._
 
 import de.ekut.tbi.validation.{
   CanBeDefined,
@@ -31,11 +33,16 @@ sealed trait DefinedWord extends ValidatorBuilder[String,CanBeDefined]
       override def negated = self
     } 
 
-
   def or(other: => Type) =
     new DefinedWord {
       override def apply[T: Constraint] =
         t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+
+  def and(other: Type) =
+    new DefinedWord {
+      override def apply[T: Constraint] =
+        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
     }
 
 }

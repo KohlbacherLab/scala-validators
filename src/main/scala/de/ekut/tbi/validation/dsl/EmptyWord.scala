@@ -2,6 +2,8 @@ package de.ekut.tbi.validation.dsl
 
 
 import cats.data.Validated.condNel
+import cats.syntax.apply._
+import cats.instances.list._
 
 import de.ekut.tbi.validation.{
   CanBeEmpty,
@@ -35,6 +37,12 @@ sealed trait EmptyWord extends ValidatorBuilder[String,CanBeEmpty]
     new EmptyWord {
       override def apply[T: Constraint] =
         t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+    
+  def and(other: Type) =
+    new EmptyWord {
+      override def apply[T: Constraint] =
+        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
     }
     
 
