@@ -4,7 +4,7 @@ package de.ekut.tbi.validation
 import cats.data.ValidatedNel
 
 
-trait ValidatorBuilder[E,C[_]]
+trait ValidatorBuilder[+E,C[_]]
 {
   self =>
 

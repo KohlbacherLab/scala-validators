@@ -25,12 +25,37 @@ final case class Patient
 )
 
 
+final case class Issue(message: String)
+
+
 object Patient
 {
 
   import de.ekut.tbi.validation.dsl._
 
 
+  implicit val stringToIssue: String => Issue = Issue(_)
+
+
+  implicit val validator: Validator[Issue,Patient] =
+    patient =>
+      (
+        patient.gender must be (defined) otherwise (
+          Issue("gender not defined")
+        ),
+        patient.birthDate must be (defined) otherwise (
+          Issue("birthDate not defined")
+        ) andThen (
+          _.get must be (before (LocalDate.now)) otherwise (Issue("Invalid birthDate in the future"))
+        ),
+        patient.name must not (be (empty)) otherwise (
+          Issue("Empty name")
+        ),
+      )
+      .mapN { case _: Product => patient }
+    
+
+/*
   implicit val validator: Validator[String,Patient] =
     patient =>
       (
@@ -40,8 +65,6 @@ object Patient
       )
       .mapN { case _: Product => patient }
     
-
-/*
   implicit val validator: Validator[String,Patient] =
     {
       case pat @ Patient(id,gender,birthDate,name) =>

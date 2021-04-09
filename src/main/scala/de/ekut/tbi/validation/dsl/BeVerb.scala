@@ -21,41 +21,42 @@ import de.ekut.tbi.validation.{
   "Couldn't find implicit Validator for ${T}. Define one or ensure it is in scope"
 )
 trait HasImplicitValidator[T]{
-  val validator: Validator[String,T]
+  val validator: Validator[Any,T]
 }
 
 object HasImplicitValidator
 {
-  implicit def apply[T](implicit v: Validator[String,T]): HasImplicitValidator[T] =
+  implicit def apply[T](implicit v: Validator[Any,T]): HasImplicitValidator[T] =
     new HasImplicitValidator[T]{
       val validator = v
     }
 }
  
 
-sealed trait ValidWord extends ValidatorBuilder[String,HasImplicitValidator]
+
+sealed trait ValidWord extends ValidatorBuilder[Any,HasImplicitValidator]
 {
   self =>
 
   type Type = ValidWord
 
-  def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
+  def apply[T](implicit hv: Constraint[T]): Validator[Any,T] = hv.validator
 
   def negated =
     new ValidWord {   
-      override def apply[T](implicit h: HasImplicitValidator[T]): Validator[String,T] = h.validator.negated
+      override def apply[T](implicit h: Constraint[T]): Validator[Any,T] = h.validator.negated
       override def negated = self
     }
   
   def or(other: => Type) =
     new ValidWord {   
-      override def apply[T: HasImplicitValidator]: Validator[String,T] =
+      override def apply[T: Constraint]: Validator[Any,T] =
         t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
     }
   
   def and(other: Type) =
     new ValidWord {   
-      override def apply[T: HasImplicitValidator]: Validator[String,T] =
+      override def apply[T: Constraint]: Validator[Any,T] =
         t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
     }
   
@@ -64,30 +65,10 @@ sealed trait ValidWord extends ValidatorBuilder[String,HasImplicitValidator]
   
 final object valid extends ValidWord
 
-/*
-final object valid extends ValidWord
-{
-  override def apply[T](implicit hv: HasImplicitValidator[T]): Validator[String,T] = hv.validator
-
-  override def negated = invalid
-  
-  def or(other: => Type) =
-
-}
-
-final object invalid extends ValidWord
-{
-  override def apply[T](implicit hv: HasImplicitValidator[T]) = valid.apply[T].negated 
-
-  override def negated = valid
-
-}
-*/
 
 
 
-
-sealed trait BeClause[C[_]] extends ValidatorBuilder[String,C]
+sealed trait BeClause[C[_]] extends ValidatorBuilder[Any,C]
 {
   self =>
 
@@ -192,5 +173,6 @@ sealed trait BeVerb
 
 
 }
+
 
 final object be extends BeVerb

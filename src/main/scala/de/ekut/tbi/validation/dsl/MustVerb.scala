@@ -17,7 +17,7 @@ import de.ekut.tbi.validation.{
 sealed trait MustOps[T,R]
 {
 
-  def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[String,R]
+  def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[Any,R]
 
   def must[E](be: BeValidator[E,T]): ValidatedNel[E,R]
 

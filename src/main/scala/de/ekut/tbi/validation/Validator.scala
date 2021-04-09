@@ -4,11 +4,8 @@ package de.ekut.tbi.validation
 import cats.data.ValidatedNel
 import cats.data.Validated.condNel
 
-//import cats.syntax.apply._
-//import cats.instances.list._
 
-
-trait Validator[E,T] extends (T => ValidatedNel[E,T])
+trait Validator[+E,T] extends (T => ValidatedNel[E,T])
 {
   self => 
 
