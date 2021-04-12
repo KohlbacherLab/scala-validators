@@ -7,19 +7,24 @@ import cats.data.Validated.condNel
 
 trait Validator[+E,T] extends (T => ValidatedNel[E,T])
 {
-  self => 
 
-  type Type <: Validator[E,T]
+//  type Type <: Validator[E,T]
 
 /*
   def and(other: Validator[E,T]): Validator[E,T] 
 
-
   def or(other: => Validator[E,T]): Validator[E,T] 
 */
 
-  def negated: Type
+}
 
+
+trait NegatableValidator[+E,T] extends Validator[E,T]
+{
+
+  type Type <: NegatableValidator[E,T]
+
+  def negated: Type
 }
 
 
@@ -33,7 +38,7 @@ object Validator
     error: T => E,
     errorWhenNegated: T => E
   )
-  extends Validator[E,T]
+  extends NegatableValidator[E,T]
   {
 
     type Type = Impl[E,T]
@@ -55,32 +60,9 @@ object Validator
 
 
   import scala.language.implicitConversions
-/*
-  implicit def fromValidation[T](
-    f: T => ValidatedNel[String,T]
-  ): Validator[String,T] =
-    new Validator[String,T]{ self =>
 
-      type Type = Validator[String,T]
-
-      def apply(t: T) = f(t)
-
-      def negated =
-        new Validator[String,T]{
-          type Type = Validator[String,T]
-          def apply(tt: T) =
-            condNel(!f(tt).isValid, tt, s"$tt should not have been valid")
-
-          def negated = self
-        }
-
-    }
-*/
-
-  implicit def fromValidationE[E,T](
+  implicit def fromValidation[E,T](
     f: T => ValidatedNel[E,T]
-  )(
-    implicit toError: String => E
   ): Validator[E,T] =
     new Validator[E,T]{ self =>
 
@@ -88,22 +70,12 @@ object Validator
 
       def apply(t: T) = f(t)
 
-      def negated =
-        new Validator[E,T]{
-
-          type Type = Validator[E,T]
-
-          def apply(tt: T) = condNel(!f(tt).isValid, tt, toError(s"$tt should not have been valid"))
-
-          def negated = self
-        }
-
     }
 
 
   def apply[T](
     f: T => Boolean
-  ): Validator[String,T] =
+  ): NegatableValidator[String,T] =
     Impl(f,true,t => s"$t does not pass validation",t => s"$t passes validation although negated")
     
 
@@ -111,7 +83,7 @@ object Validator
     f: T => Boolean
   )(
     error: T => String
-  ): Validator[String,T] =
+  ): NegatableValidator[String,T] =
     Impl(f,true,error, t => error(t).replace(" not ",""))
     
 
@@ -120,9 +92,38 @@ object Validator
   )(
     error: T => E,
     errorWhenNegated: T => E
-  ): Validator[E,T] =
+  ): NegatableValidator[E,T] =
     Impl(f,true,error,errorWhenNegated)
-  
-  
+
+}
+
+
+object NegatableValidator
+{
+
+  import scala.language.implicitConversions
+
+  implicit def fromValidation[E,T](
+    f: T => ValidatedNel[E,T]
+  )(
+    implicit toError: String => E
+  ): NegatableValidator[E,T] =
+    new NegatableValidator[E,T]{ self =>
+
+      type Type = NegatableValidator[E,T]
+
+      def apply(t: T) = f(t)
+
+      def negated =
+        new NegatableValidator[E,T]{
+
+          type Type = NegatableValidator[E,T]
+
+          def apply(tt: T) = condNel(!f(tt).isValid, tt, toError(s"$tt should not have been valid"))
+
+          def negated = self
+        }
+
+    }
 
 }

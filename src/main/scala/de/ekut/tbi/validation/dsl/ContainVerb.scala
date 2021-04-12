@@ -9,7 +9,9 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   CanContain,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
@@ -52,7 +54,7 @@ object only
 }
 
 
-sealed trait ContainClause[U] extends ValidatorBuilder[String,({ type CanContainT[x] = CanContain[U,x]})#CanContainT]
+sealed trait ContainClause[U] extends NegatableValidatorBuilder[String,({ type CanContainT[x] = CanContain[U,x]})#CanContainT]
 {
   self =>
 
@@ -96,7 +98,7 @@ sealed trait ContainVerb
 
   def apply[U](anyOf: AnyOfWord[U]): ContainClause[U] = {
     new ContainClause[U]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
+      def apply[T](implicit cc: CanContain[U,T]) =
         Validator[String,T](
           cc.containsAnyOf(_)(anyOf.values)
         )(
@@ -109,7 +111,7 @@ sealed trait ContainVerb
 
   def apply[U](allOf: AllOfWord[U]): ContainClause[U] = {
     new ContainClause[U]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
+      def apply[T](implicit cc: CanContain[U,T]) =
         Validator[String,T](
           cc.containsAllOf(_)(allOf.values)
         )(
@@ -121,7 +123,7 @@ sealed trait ContainVerb
 
   def apply[U](only: OnlyWord[U]): ContainClause[U] = {
     new ContainClause[U]{
-      def apply[T](implicit cc: CanContain[U,T]): Validator[String,T] =
+      def apply[T](implicit cc: CanContain[U,T]) =
         Validator[String,T](
           cc.containsOnly(_)(only.value)
         )(

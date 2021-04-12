@@ -8,12 +8,14 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   CanBeDefined,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
 
-sealed trait NumericWord[C[_]] extends ValidatorBuilder[String,C]
+sealed trait NumericWord[C[_]] extends NegatableValidatorBuilder[String,C]
 {
   self =>
 

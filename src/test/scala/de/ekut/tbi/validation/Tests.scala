@@ -22,8 +22,8 @@ class Tests extends AnyFlatSpec
   implicit def validatedToBoolean[E,T](v: Validated[E,T]): Boolean = v.isValid
 
 
-//  val even = Validator[String,Int](n => n%2 == 0)(n => s"$n is not even", n => s"$n is even")
-  val even: Validator[String,Int] = n => Validated.condNel(n%2 == 0, n, s"$n is not even")
+  val even = Validator[String,Int](n => n%2 == 0)(n => s"$n is not even", n => s"$n is even")
+//  val even: Validator[String,Int] = n => Validated.condNel(n%2 == 0, n, s"$n is not even")
 
   val odd = not (even)
 
@@ -129,7 +129,6 @@ class Tests extends AnyFlatSpec
 
      assert(all(patients) must be (valid))
 
-     assert(all(patients) must not (be (invalid)))
 
 
   }

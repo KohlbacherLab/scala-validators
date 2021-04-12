@@ -8,7 +8,7 @@ import scala.util.matching.Regex
 import de.ekut.tbi.validation.{
   CanBeDefined,
   Validator,
-  ValidatorBuilder
+  NegatableValidator,
 }
 
 
@@ -16,7 +16,7 @@ import de.ekut.tbi.validation.{
 final object matchRegex
 {
 
-  def apply(regex: Regex) =
+  def apply(regex: Regex): NegatableValidator[String,String] =
     Validator[String,String](
       regex.matches(_)
     )(
@@ -24,7 +24,7 @@ final object matchRegex
       t => s"'$t' matches regex '$regex'"
     )
 
-  def apply(pattern: String): Validator[String,String] = apply(pattern.r)
+  def apply(pattern: String): NegatableValidator[String,String] = apply(pattern.r)
 
 }
 

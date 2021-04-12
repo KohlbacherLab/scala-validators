@@ -35,45 +35,6 @@ package object dsl
 
   final val nonEmpty = not (empty)
 
-  final val invalid = not (valid)
-
-/*
-  implicit class ValidationOps[T](val t: T) extends AnyVal
-  {
-
-    def must = new MustVerb(t)
-
-    def must[E,Constraint[_]](clause: ValidatorBuilder[E,Constraint])(implicit constraint: clause.Constraint[T]) =
-      clause.apply[T].apply(t)
-
-
-    def must[Constraint[_]](beClause: BeClause[Constraint])(implicit constraint: Constraint[T]) =
-      beClause.apply[T].apply(t)
-
-
-    def must[E](be: BeValidator[E,T]) = be(t)
-
-
-    def must(matchRegex: RegexValidator)(implicit str: T =:= String) = matchRegex(t)
-
-
-    def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
-      containClause.apply[T].apply(t)
-
-    def validate[E](implicit validator: Validator[E,T]) = validator(t)
-
-  }
-*/
-
-
-/*
-  implicit class StringValidationOps(val s: String) extends AnyVal
-  {
-
-    def must(matchRegex: RegexValidator) = matchRegex(s)
-
-  }
-*/
 
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])

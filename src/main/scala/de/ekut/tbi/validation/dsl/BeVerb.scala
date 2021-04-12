@@ -13,28 +13,75 @@ import de.ekut.tbi.validation.{
   CanContain,
   Unconstrained,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
-
+/*
 @annotation.implicitNotFound(
   "Couldn't find implicit Validator for ${T}. Define one or ensure it is in scope"
 )
-trait HasImplicitValidator[T]{
-  val validator: Validator[Any,T]
+trait HasValidator[T]{
+  val validator: NegatableValidator[Any,T]
 }
 
-object HasImplicitValidator
+object HasValidator
 {
-  implicit def apply[T](implicit v: Validator[Any,T]): HasImplicitValidator[T] =
-    new HasImplicitValidator[T]{
+  implicit def apply[T](implicit v: NegatableValidator[Any,T]): HasValidator[T] =
+    new HasValidator[T]{
       val validator = v
     }
 }
  
 
 
-sealed trait ValidWord extends ValidatorBuilder[Any,HasImplicitValidator]
+//sealed trait ValidWord extends ValidatorBuilder[Any,HasValidator]
+sealed trait ValidWord extends NegatableValidatorBuilder[Any,HasValidator]
+{
+  self =>
+
+  type Type = ValidWord
+
+  def apply[T](implicit hv: Constraint[T]): NegatableValidator[Any,T] = hv.validator
+
+  def negated =
+    new ValidWord {   
+      override def apply[T](implicit h: Constraint[T]): NegatableValidator[Any,T] = h.validator.negated
+      override def negated = self
+    }
+  
+  def or(other: => Type) =
+    new ValidWord {   
+      override def apply[T: Constraint]: NegatableValidator[Any,T] =
+        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
+    }
+  
+  def and(other: Type) =
+    new ValidWord {   
+      override def apply[T: Constraint]: NegatableValidator[Any,T] =
+        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
+    }
+  
+    
+}
+*/
+
+trait HasValidator[T]{
+  val validator: Validator[Any,T]
+}
+
+object HasValidator
+{
+  implicit def apply[T](implicit v: Validator[Any,T]): HasValidator[T] =
+    new HasValidator[T]{
+      val validator = v
+    }
+}
+ 
+
+
+sealed trait ValidWord extends ValidatorBuilder[Any,HasValidator]
 {
   self =>
 
@@ -42,12 +89,6 @@ sealed trait ValidWord extends ValidatorBuilder[Any,HasImplicitValidator]
 
   def apply[T](implicit hv: Constraint[T]): Validator[Any,T] = hv.validator
 
-  def negated =
-    new ValidWord {   
-      override def apply[T](implicit h: Constraint[T]): Validator[Any,T] = h.validator.negated
-      override def negated = self
-    }
-  
   def or(other: => Type) =
     new ValidWord {   
       override def apply[T: Constraint]: Validator[Any,T] =
@@ -59,7 +100,6 @@ sealed trait ValidWord extends ValidatorBuilder[Any,HasImplicitValidator]
       override def apply[T: Constraint]: Validator[Any,T] =
         t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
     }
-  
     
 }
   
@@ -68,7 +108,7 @@ final object valid extends ValidWord
 
 
 
-sealed trait BeClause[C[_]] extends ValidatorBuilder[Any,C]
+sealed trait BeClause[C[_]] extends NegatableValidatorBuilder[Any,C]
 {
   self =>
 
@@ -93,7 +133,7 @@ sealed trait BeClause[C[_]] extends ValidatorBuilder[Any,C]
 }
 
 
-sealed trait BeValidator[E,T] extends Validator[E,T]
+sealed trait BeValidator[E,T] extends NegatableValidator[E,T]
 {
   type Type = BeValidator[E,T]
 }
@@ -101,14 +141,14 @@ sealed trait BeValidator[E,T] extends Validator[E,T]
 object BeValidator
 {
 
-  private final case class Impl[E,T](v: Validator[E,T]) extends BeValidator[E,T]
+  private final case class Impl[E,T](v: NegatableValidator[E,T]) extends BeValidator[E,T]
   {
     override def apply(t: T) = v(t)
 
     override def negated = BeValidator(v.negated)
   }
 
-  def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = Impl(v)
+  def apply[E,T](v: NegatableValidator[E,T]): BeValidator[E,T] = Impl(v)
 }
 
 
@@ -117,9 +157,9 @@ sealed trait BeVerb
 
   self =>
 
-  def apply(valid: ValidWord): BeClause[HasImplicitValidator] =
-    new BeClause[HasImplicitValidator]{ 
-      def apply[T: HasImplicitValidator] = valid.apply[T]
+  def apply(valid: ValidWord): BeClause[HasValidator] =
+    new BeClause[HasValidator]{ 
+      def apply[T: HasValidator] = valid.apply[T]
     }
 
 
@@ -156,7 +196,7 @@ sealed trait BeVerb
     
 
 
-  def apply[E,T](v: Validator[E,T]): BeValidator[E,T] = 
+  def apply[E,T](v: NegatableValidator[E,T]): BeValidator[E,T] = 
     BeValidator(v)
 
 

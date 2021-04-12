@@ -9,7 +9,9 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   CanHaveSize,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
@@ -36,7 +38,7 @@ object length
 
 
 
-sealed trait HaveClause[C[_]] extends ValidatorBuilder[String,C]
+sealed trait HaveClause[C[_]] extends NegatableValidatorBuilder[String,C]
 {
   self =>
 

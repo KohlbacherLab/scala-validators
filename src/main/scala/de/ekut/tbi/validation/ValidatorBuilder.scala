@@ -6,7 +6,6 @@ import cats.data.ValidatedNel
 
 trait ValidatorBuilder[+E,C[_]]
 {
-  self =>
 
   type Constraint[x] = C[x]
 
@@ -19,6 +18,17 @@ trait ValidatorBuilder[+E,C[_]]
 
   def and(other: Type): Type
 
+}
+
+
+trait NegatableValidatorBuilder[+E,C[_]] extends ValidatorBuilder[E,C]
+{
+
+  type Type <: NegatableValidatorBuilder[E,C]
+
+  def apply[T: Constraint]: NegatableValidator[E,T]
+
   def negated: Type
 
 }
+

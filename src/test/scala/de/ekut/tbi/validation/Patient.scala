@@ -34,9 +34,6 @@ object Patient
   import de.ekut.tbi.validation.dsl._
 
 
-  implicit val stringToIssue: String => Issue = Issue(_)
-
-
   implicit val validator: Validator[Issue,Patient] =
     patient =>
       (

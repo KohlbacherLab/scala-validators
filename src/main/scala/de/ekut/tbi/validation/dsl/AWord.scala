@@ -10,12 +10,15 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   Unconstrained,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
 
-sealed trait IsInstanceClause[U] extends ValidatorBuilder[String,Unconstrained]
+//sealed trait IsInstanceClause[U] extends ValidatorBuilder[String,Unconstrained]
+sealed trait IsInstanceClause[U] extends NegatableValidatorBuilder[String,Unconstrained]
 {
   self =>
 

@@ -8,18 +8,20 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   CanBeEmpty,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
 
-sealed trait EmptyWord extends ValidatorBuilder[String,CanBeEmpty]
+sealed trait EmptyWord extends NegatableValidatorBuilder[String,CanBeEmpty]
 {
   self =>
 
   type Type = EmptyWord
 
-  def apply[T](implicit cbe: CanBeEmpty[T]): Validator[String,T] =
+  def apply[T](implicit cbe: CanBeEmpty[T]): NegatableValidator[String,T] =
     Validator[String,T](
       cbe.isEmpty(_)
     )(
@@ -29,7 +31,7 @@ sealed trait EmptyWord extends ValidatorBuilder[String,CanBeEmpty]
 
   def negated = 
     new EmptyWord {
-      override def apply[T: Constraint]: Validator[String,T] = self.apply[T].negated
+      override def apply[T: Constraint]: NegatableValidator[String,T] = self.apply[T].negated
       override def negated = self
     }
 
@@ -50,27 +52,3 @@ sealed trait EmptyWord extends ValidatorBuilder[String,CanBeEmpty]
 
 final case object empty extends EmptyWord
 
-
-/*
-final case object empty extends EmptyWord
-{
-  def apply[T](implicit cbe: CanBeEmpty[T]): Validator[String,T] =
-    Validator[String,T](
-      cbe.isEmpty(_)
-    )(
-      t => s"$t is not empty",
-      t => s"$t is empty"
-    )
-
-  def negated = nonEmpty
-}
-
-
-final case object nonEmpty extends EmptyWord
-{
-  def apply[T](implicit cbe: CanBeEmpty[T]): Validator[String,T] =
-    empty.apply[T].negated
-
-  def negated = empty
-}
-*/

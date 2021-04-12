@@ -9,11 +9,13 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   CanContain,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
-sealed trait InWord[Us] extends ValidatorBuilder[String,({ type CanContainT[x] = CanContain[x,Us]})#CanContainT]
+sealed trait InWord[Us] extends NegatableValidatorBuilder[String,({ type CanContainT[x] = CanContain[x,Us]})#CanContainT]
 {
   self =>
 
@@ -43,7 +45,7 @@ final object in
 
   def apply[Us](us: Us): InWord[Us] =
     new InWord[Us]{
-      def apply[T](implicit cc: CanContain[T,Us]): Validator[String,T] =
+      def apply[T](implicit cc: CanContain[T,Us]): NegatableValidator[String,T] =
         Validator[String,T](
           cc.contains(us)(_)
         )(

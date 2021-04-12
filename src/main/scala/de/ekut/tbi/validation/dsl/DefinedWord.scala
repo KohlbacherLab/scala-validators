@@ -8,18 +8,20 @@ import cats.instances.list._
 import de.ekut.tbi.validation.{
   CanBeDefined,
   Validator,
-  ValidatorBuilder
+  ValidatorBuilder,
+  NegatableValidator,
+  NegatableValidatorBuilder
 }
 
 
 
-sealed trait DefinedWord extends ValidatorBuilder[String,CanBeDefined]
+sealed trait DefinedWord extends NegatableValidatorBuilder[String,CanBeDefined]
 {
   self =>
 
   type Type = DefinedWord
 
-  def apply[T](implicit cbd: CanBeDefined[T]): Validator[String,T] =
+  def apply[T](implicit cbd: CanBeDefined[T]): NegatableValidator[String,T] =
     Validator[String,T](
       cbd.isDefined(_)
     )(
@@ -29,7 +31,7 @@ sealed trait DefinedWord extends ValidatorBuilder[String,CanBeDefined]
 
   def negated = 
     new DefinedWord {
-      override def apply[T: Constraint]: Validator[String,T] = self.apply[T].negated
+      override def apply[T: Constraint]: NegatableValidator[String,T] = self.apply[T].negated
       override def negated = self
     } 
 
@@ -48,29 +50,4 @@ sealed trait DefinedWord extends ValidatorBuilder[String,CanBeDefined]
 }
 
 final case object defined extends DefinedWord
-
-/*
-final case object defined extends DefinedWord
-{
-  def apply[T](implicit cbd: CanBeDefined[T]): Validator[String,T] =
-    Validator[String,T](
-      cbd.isDefined(_)
-    )(
-      t => s"$t is not defined",
-      t => s"$t is defined"
-    )
-  def negated = undefined
-
-}
-
-final case object undefined extends DefinedWord
-{
-  def apply[T](implicit cbd: CanBeDefined[T]): Validator[String,T] =
-    defined.apply[T].negated
-  
-  def negated = defined
-}
-*/
-
-
 
