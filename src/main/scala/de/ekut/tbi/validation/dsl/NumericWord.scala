@@ -25,18 +25,6 @@ sealed trait NumericWord[C[_]] extends NegatableValidatorBuilder[String,C]
     new NumericWord[C]{
       def apply[T: C] = self.apply[T].negated
     }
-
-  def or(other: => Type) =
-    new NumericWord[C]{
-      def apply[T: C] =
-        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
-    }
-
-  def and(other: Type) =
-    new NumericWord[C]{
-      def apply[T: C] =
-        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
-    }
 }
 
 

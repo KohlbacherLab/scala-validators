@@ -19,13 +19,17 @@ sealed trait MustOps[T,R]
 
   def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[Any,R]
 
-  def must[E](be: BeValidator[E,T]): ValidatedNel[E,R]
+//  def must[E](be: BeValidator[E,T]): ValidatedNel[E,R]
+  def must[E](be: Validator[E,T]): ValidatedNel[E,R]
 
 //  def must(matchRegex: Validator[String,String])(implicit str: T =:= String): ValidatedNel[String,R]
 
   def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]): ValidatedNel[String,R]
 
   def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]): ValidatedNel[String,R]
+
+  def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]): ValidatedNel[E,R]
+
 }
 
 
@@ -37,10 +41,12 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
     beClause.apply[T].apply(t)
 
 
-  override def must[E](be: BeValidator[E,T]) = be(t)
+//  override def must[E](be: BeValidator[E,T]) = be(t)
+  override def must[E](be: Validator[E,T]) = be(t)
 
 
-  def must(matchRegex: Validator[String,String])(implicit str: T =:= String) = matchRegex(t)
+  def must(matchRegex: Validator[String,String])(implicit str: T =:= String) =
+    matchRegex(t)
 
 
   override def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
@@ -48,6 +54,9 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
 
   override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
     clause.apply[T].apply(t)
+
+  override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+    junction.apply[T].apply(t)
 
 }
 
@@ -60,7 +69,8 @@ final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) ext
     ts.traverse(beClause.apply[T])
 
 
-  override def must[E](be: BeValidator[E,T]) =
+//  override def must[E](be: BeValidator[E,T]) =
+  override def must[E](be: Validator[E,T]) =
     ts.traverse(be)
 
 
@@ -74,5 +84,9 @@ final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) ext
 
   override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
     ts.traverse(clause.apply[T])
+
+
+  override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+    ts.traverse(junction.apply[T])
 
 }

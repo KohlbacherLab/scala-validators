@@ -8,8 +8,13 @@ import cats.data.{
 }
 import cats.Traverse
 import cats.syntax.traverse._
+import cats.syntax.apply._
+import cats.instances.list._
 
-import de.ekut.tbi.validation.Validator
+import de.ekut.tbi.validation.{
+  Validator,
+  ValidatorBuilder
+}
 
 
 package object dsl
@@ -31,9 +36,11 @@ package object dsl
   def all[T,C[T]: Traverse](ts: C[T]) = new MustVerbTraversable(ts)
 
 
+
   final val undefined = not (defined)
 
   final val nonEmpty = not (empty)
+
 
 
 
@@ -55,6 +62,63 @@ package object dsl
 
 
 
+  type Given[U] = { type Equals[T] = T =:= U }
+
+
+  sealed trait VBJunction[+E,LC[_],RC[_]]{
+    def apply[T: LC: RC]: Validator[E,T]
+  }
+
+
+  implicit class ValidatorBuilderLogicOps[E,LC[_]](val left: ValidatorBuilder[E,LC]) extends AnyVal
+  {
+
+    def or[RC[_]](right: => ValidatorBuilder[E,RC]): VBJunction[E,LC,RC] =
+      new VBJunction[E,LC,RC]{
+        def apply[T: LC: RC]: Validator[E,T] =
+          t => left.apply[T].apply(t) orElse right.apply[T].apply(t)
+      }
+
+    def or[U](right: Validator[E,U]): VBJunction[E,LC,Given[U]#Equals] =
+      new VBJunction[E,LC,Given[U]#Equals]{
+        def apply[T: LC: Given[U]#Equals]: Validator[E,T] =
+          t => left.apply[T].apply(t) orElse right(t).asInstanceOf[ValidatedNel[E,T]]
+      }
+
+    def and[RC[_]](right: ValidatorBuilder[E,RC]): VBJunction[E,LC,RC] =
+      new VBJunction[E,LC,RC]{
+        def apply[T: LC: RC]: Validator[E,T] =
+          t => (left.apply[T].apply(t),right.apply[T].apply(t)).mapN((_,_) => t)
+      }
+
+    def and[U](right: Validator[E,U]): VBJunction[E,LC,Given[U]#Equals] =
+      new VBJunction[E,LC,Given[U]#Equals]{
+        def apply[T: LC: Given[U]#Equals]: Validator[E,T] =
+          t => (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[E,T]]).mapN((_,_) => t)
+      }
+
+  }
+
+  
+  implicit class ValidatorLogicOps[E,T](val left: Validator[E,T]) extends AnyVal
+  {
+
+    def or[EE >: E, RC[_]](right: => ValidatorBuilder[EE,RC])(implicit rc: RC[T]): Validator[EE,T] =
+      t => left(t) orElse right.apply[T].apply(t)
+
+
+    def and[EE >: E, RC[_]](right: ValidatorBuilder[EE,RC])(implicit rc: RC[T]): Validator[EE,T] =
+      t => (left(t), right.apply[T].apply(t)).mapN((_,_) => t)
+
+
+    def or(right: => Validator[E,T]): Validator[E,T] =
+      t => left(t) orElse right(t)
+
+
+    def and(right: Validator[E,T]): Validator[E,T] =
+      t => (left(t), right(t)).mapN((_,_) => t)
+
+  }
 
 
 }

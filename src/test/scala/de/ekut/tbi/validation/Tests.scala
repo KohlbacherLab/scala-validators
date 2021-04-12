@@ -9,6 +9,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import cats.data.Validated
 import cats.instances.list._
+import cats.instances.option._
 
 import de.ekut.tbi.validation.dsl._
 
@@ -40,6 +41,8 @@ class Tests extends AnyFlatSpec
 
     assert(Some(42) must (contain (42) or contain(43)))
 
+    assert(Option(42) must (be (defined) and contain(42)))
+
     assert(Some(42) must (contain (42) and not (contain(43))))
 
     assert(None must be (undefined))
@@ -61,7 +64,12 @@ class Tests extends AnyFlatSpec
 
     assert(4 must be (positive))
 
-//    assert(4 must (be (positive) and be (even)))
+    assert(-4 must (be (positive) or (be (even))))
+
+    assert(3 must (be (even) or (be (positive))))
+
+    assert(4 must (be (positive) and (be (even))))
+
 
     assert(-4 must not (be (positive)))
 
@@ -98,7 +106,8 @@ class Tests extends AnyFlatSpec
 
     assert(all(List(testString)) must have (length (11)))
 
-    assert(all(List(testString)) must contain ('e'))
+    assert(all(Option(testString)) must contain ('e'))
+//    assert(all(List(testString)) must contain ('e'))
 
     assert(all(List(testString)) must contain (anyOf('a','e','i','o','u')))
 

@@ -53,6 +53,18 @@ object only
   }
 }
 
+sealed trait NoneOfWord[U]
+{
+  val values: Set[U]
+}
+
+object noneOf
+{
+  def apply[U](u1: U, u2: U, us: U*): NoneOfWord[U] = {
+    new NoneOfWord[U]{ val values = (u1 +: u2 +: us).toSet }
+  }
+}
+
 
 sealed trait ContainClause[U] extends NegatableValidatorBuilder[String,({ type CanContainT[x] = CanContain[U,x]})#CanContainT]
 {
@@ -63,18 +75,6 @@ sealed trait ContainClause[U] extends NegatableValidatorBuilder[String,({ type C
   def negated =
     new ContainClause[U]{
       def apply[T](implicit cc: CanContain[U,T]) = self.apply[T].negated
-    }
-
-  def or(other: => Type) =
-    new ContainClause[U]{
-      def apply[T](implicit cc: CanContain[U,T]) =
-        t => self.apply[T].apply(t) orElse other.apply[T].apply(t) 
-    }
-
-  def and(other: Type) =
-    new ContainClause[U]{
-      def apply[T](implicit cc: CanContain[U,T]) =
-        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t) 
     }
 
 }
@@ -107,6 +107,20 @@ sealed trait ContainVerb
         )
     }
   }
+
+
+  def apply[U](noneOf: NoneOfWord[U]): ContainClause[U] =
+    new ContainClause[U]{
+      self =>
+      def apply[T](implicit cc: CanContain[U,T]) =
+        Validator[String,T](
+          !cc.containsAnyOf(_)(noneOf.values)
+        )(
+          t => s"$t contains some element of ${noneOf.values}",
+          t => s"$t does not contain any element of ${noneOf.values}"
+        )
+    }
+
 
 
   def apply[U](allOf: AllOfWord[U]): ContainClause[U] = {

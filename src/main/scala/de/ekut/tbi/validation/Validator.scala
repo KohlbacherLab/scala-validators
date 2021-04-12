@@ -6,18 +6,6 @@ import cats.data.Validated.condNel
 
 
 trait Validator[+E,T] extends (T => ValidatedNel[E,T])
-{
-
-//  type Type <: Validator[E,T]
-
-/*
-  def and(other: Validator[E,T]): Validator[E,T] 
-
-  def or(other: => Validator[E,T]): Validator[E,T] 
-*/
-
-}
-
 
 trait NegatableValidator[+E,T] extends Validator[E,T]
 {
@@ -49,10 +37,6 @@ object Validator
       else 
         condNel(!f(t), t, errorWhenNegated(t))
     }
-
-//    override def and(other: Validator[E,T]): Validator[E,T] = ??? 
-    
-//    override def or(other: => Validator[E,T]): Validator[E,T] = ???
 
     override def negated: Impl[E,T] = copy(mustBeTrue = !mustBeTrue)
 

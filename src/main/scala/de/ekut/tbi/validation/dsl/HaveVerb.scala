@@ -48,19 +48,6 @@ sealed trait HaveClause[C[_]] extends NegatableValidatorBuilder[String,C]
     new HaveClause[C]{
       def apply[T: Constraint] = self.apply[T].negated
     }
-
-  def or(other: => Type) =
-    new HaveClause[C]{
-      def apply[T: Constraint] =
-        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
-    }
-
-  def and(other: Type) =
-    new HaveClause[C]{
-      def apply[T: Constraint] =
-        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
-    }
-
     
 }
 

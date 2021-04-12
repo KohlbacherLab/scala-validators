@@ -35,18 +35,6 @@ sealed trait DefinedWord extends NegatableValidatorBuilder[String,CanBeDefined]
       override def negated = self
     } 
 
-  def or(other: => Type) =
-    new DefinedWord {
-      override def apply[T: Constraint] =
-        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
-    }
-
-  def and(other: Type) =
-    new DefinedWord {
-      override def apply[T: Constraint] =
-        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
-    }
-
 }
 
 final case object defined extends DefinedWord

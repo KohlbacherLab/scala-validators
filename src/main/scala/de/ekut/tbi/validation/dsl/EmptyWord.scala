@@ -35,19 +35,6 @@ sealed trait EmptyWord extends NegatableValidatorBuilder[String,CanBeEmpty]
       override def negated = self
     }
 
-  def or(other: => Type) =
-    new EmptyWord {
-      override def apply[T: Constraint] =
-        t => self.apply[T].apply(t) orElse other.apply[T].apply(t)
-    }
-    
-  def and(other: Type) =
-    new EmptyWord {
-      override def apply[T: Constraint] =
-        t => (self.apply[T].apply(t), other.apply[T].apply(t)).mapN((_,_) => t)
-    }
-    
-
 }
 
 final case object empty extends EmptyWord
