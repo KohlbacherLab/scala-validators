@@ -33,7 +33,9 @@ package object dsl
   implicit def toMustVerb[T](t: T): MustVerb[T] = new MustVerb(t)
 
 
-  def all[T,C[T]: Traverse](ts: C[T]) = new MustVerbTraversable(ts)
+  def all[T,C[T]: Traverse](ts: C[T]): MustVerbTraversable[T,C] = new MustVerbTraversable(ts)
+
+  def all[T](t1: T, t2: T, ts: T*): MustVerbTraversable[T,List] = all((t1 +: t2 +: ts).toList)
 
 
 
@@ -73,6 +75,31 @@ package object dsl
   implicit class ValidatorBuilderLogicOps[E,LC[_]](val left: ValidatorBuilder[E,LC]) extends AnyVal
   {
 
+    def or[EE >: E, RC[_]](right: => ValidatorBuilder[EE,RC]): VBJunction[EE,LC,RC] =
+      new VBJunction[EE,LC,RC]{
+        def apply[T: LC: RC]: Validator[EE,T] =
+          t => left.apply[T].apply(t) orElse right.apply[T].apply(t)
+      }
+
+    def or[EE >: E, U](right: Validator[EE,U]): VBJunction[EE,LC,Given[U]#Equals] =
+      new VBJunction[EE,LC,Given[U]#Equals]{
+        def apply[T: LC: Given[U]#Equals]: Validator[EE,T] =
+          t => left.apply[T].apply(t) orElse right(t).asInstanceOf[ValidatedNel[EE,T]]
+      }
+
+    def and[EE >: E, RC[_]](right: ValidatorBuilder[EE,RC]): VBJunction[EE,LC,RC] =
+      new VBJunction[EE,LC,RC]{
+        def apply[T: LC: RC]: Validator[EE,T] =
+          t => (left.apply[T].apply(t),right.apply[T].apply(t)).mapN((_,_) => t)
+      }
+
+    def and[EE >: E, U](right: Validator[EE,U]): VBJunction[EE,LC,Given[U]#Equals] =
+      new VBJunction[EE,LC,Given[U]#Equals]{
+        def apply[T: LC: Given[U]#Equals]: Validator[EE,T] =
+          t => (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[EE,T]]).mapN((_,_) => t)
+      }
+
+/*
     def or[RC[_]](right: => ValidatorBuilder[E,RC]): VBJunction[E,LC,RC] =
       new VBJunction[E,LC,RC]{
         def apply[T: LC: RC]: Validator[E,T] =
@@ -96,7 +123,7 @@ package object dsl
         def apply[T: LC: Given[U]#Equals]: Validator[E,T] =
           t => (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[E,T]]).mapN((_,_) => t)
       }
-
+*/
   }
 
   
@@ -111,14 +138,54 @@ package object dsl
       t => (left(t), right.apply[T].apply(t)).mapN((_,_) => t)
 
 
-    def or(right: => Validator[E,T]): Validator[E,T] =
+    def or[EE >: E](right: => Validator[EE,T]): Validator[EE,T] =
       t => left(t) orElse right(t)
 
 
-    def and(right: Validator[E,T]): Validator[E,T] =
+    def and[EE >: E](right: Validator[EE,T]): Validator[EE,T] =
       t => (left(t), right(t)).mapN((_,_) => t)
 
   }
+
+
+
+  implicit class ValidatedTuple2Ops[Err,A,B](
+    val vs: Tuple2[ValidatedNel[Err,A],ValidatedNel[Err,B]]
+  ) extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+  implicit class ValidatedTuple3Ops[Err,A,B,C](
+    val vs: Tuple3[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C]]
+  ) extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+  implicit class ValidatedTuple4Ops[Err,A,B,C,D](
+    val vs: Tuple4[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C],ValidatedNel[Err,D]]
+  ) extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+  implicit class ValidatedTuple5Ops[Err,A,B,C,D,E](
+    val vs: Tuple5[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C],ValidatedNel[Err,D],ValidatedNel[Err,E]]
+  ) extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+
 
 
 }

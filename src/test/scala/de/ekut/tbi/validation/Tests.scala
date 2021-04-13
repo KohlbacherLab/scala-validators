@@ -20,7 +20,10 @@ class Tests extends AnyFlatSpec
 
   import scala.language.implicitConversions
 
-  implicit def validatedToBoolean[E,T](v: Validated[E,T]): Boolean = v.isValid
+
+  private def assertValid[E,A](v: Validated[E,A]) = assert(v.isValid)
+
+  private def assertInvalid[E,A](v: Validated[E,A]) = assert(v.isInvalid)
 
 
   val even = Validator[String,Int](n => n%2 == 0)(n => s"$n is not even", n => s"$n is even")
@@ -29,72 +32,84 @@ class Tests extends AnyFlatSpec
   val odd = not (even)
 
 
-  "Validation DSL" must "work as expected" in {
 
-    assert(Option(42) must be (a [Some[Int]]))
+  "Option validations" must "work as expected" in {
 
-    assert(Option(42) must not (be (a [None.type])))
+    assertValid(Option(42) must be (a [Some[_]]))
 
-    assert(Some(42) must be (defined))
+    assertValid(Option(42) must not (be (a [None.type])))
+
+    assertValid(Some(42) must be (defined))
     
-    assert(Some(42) must contain (42))
+    assertValid(Some(42) must contain (42))
 
-    assert(Some(42) must (contain (42) or contain(43)))
+    assertValid(Some(42) must (contain (42) or contain(43)))
 
-    assert(Option(42) must (be (defined) and contain(42)))
+    assertValid(Option(42) must (be (defined) and contain(42)))
 
-    assert(Some(42) must (contain (42) and not (contain(43))))
+    assertValid(None must be (undefined))
 
-    assert(None must be (undefined))
+    assertValid(None must be (empty))
 
-    assert(None must be (empty))
-
-
-    val oneToTen = 1 to 10
-
-    assert(oneToTen must contain (anyOf (2,20,200)))
-
-    assert(oneToTen must contain (allOf (2,5,7)))
-
-    assert(oneToTen must (contain (allOf (2,5,7)) and not (contain (anyOf(20,21,22)))))
-
-    assert(oneToTen must have (size (10)))
-
-    assert(4 must be (in (oneToTen)))
-
-    assert(4 must be (positive))
-
-    assert(-4 must (be (positive) or (be (even))))
-
-    assert(3 must (be (even) or (be (positive))))
-
-    assert(4 must (be (positive) and (be (even))))
-
-
-    assert(-4 must not (be (positive)))
-
-    assert(4 must be (equalTo (4)))
-
-    assert(4 must be (4))
-    
-    assert(all(oneToTen.toList) must be (positive))
-    
-    assert(all(oneToTen.toList) must not (be (negative)))
-
-    assert(all(Range(0,10,2).toList) must be (even))
-    assert(all(Range(0,10,2).toList) must not (be (odd)))
-    
-    assert(all(Range(1,11,2).toList) must be (odd))
-    assert(all(Range(1,11,2).toList) must not (be (even)))
 
   }
 
 
+  "Range validations" must "work as expected" in {
+
+    val oneToTen = 1 to 10
+
+    assertValid(oneToTen must have (size (10)))
+
+    assertValid(oneToTen must contain (anyOf (2,20,200)))
+
+    assertValid(oneToTen must contain (allOf (2,5,7)))
+
+    assertValid(oneToTen must (contain (allOf (2,5,7)) and not (contain (anyOf(20,21,22)))))
+
+    assertValid(4 must be (in (oneToTen)))
+
+    assertValid(all(oneToTen.toList) must be (positive))
+    
+    assertValid(all(oneToTen.toList) must not (be (negative)))
+
+    assertValid(all(Range(0,10,2).toList) must be (even))
+    assertValid(all(Range(0,10,2).toList) must not (be (odd)))
+    
+    assertValid(all(Range(1,11,2).toList) must be (odd))
+    assertValid(all(Range(1,11,2).toList) must not (be (even)))
+
+  }
+
+
+  "Numeric validations" must "work as expected" in {
+
+    assertValid(4 must be (positive))
+
+    assertValid(-4 must not (be (positive)))
+
+    assertValid(-4 must (be (positive) or (be (even))))
+
+    assertValid(3 must (be (even) or (be (positive))))
+
+    assertValid(-3 must not (be (even) or (be (positive))))
+
+    assertValid(4 must (be (positive) and (be (even))))
+
+
+    assertValid(4 must be (equalTo (4)))
+
+    assertValid(4 must be (4))
+    
+
+  }
+  
+
   "DateTime validations" must "work as expected" in {
 
-    assert(LocalDate.now.minusDays(1) must be (before (LocalDate.now)))
+    assertValid(LocalDate.now.minusDays(1) must be (before (LocalDate.now)))
     
-    assert(LocalDate.now.plusDays(1) must be (after (LocalDate.now)))
+    assertValid(LocalDate.now.plusDays(1) must be (after (LocalDate.now)))
 
   }
 
@@ -104,16 +119,15 @@ class Tests extends AnyFlatSpec
     val testString = "Test String"
 
 
-    assert(all(List(testString)) must have (length (11)))
+    assertValid(all(List(testString)) must have (length (11)))
 
-    assert(all(Option(testString)) must contain ('e'))
-//    assert(all(List(testString)) must contain ('e'))
+    assertValid(all(Option(testString)) must contain ('e'))
 
-    assert(all(List(testString)) must contain (anyOf('a','e','i','o','u')))
+    assertValid(all(List(testString)) must contain (anyOf('a','e','i','o','u')))
 
-    assert(all(List(testString)) must contain (allOf('e','i')))
+    assertValid(all(List(testString)) must contain (allOf('e','i')))
 
-    assert(all(List(testString)) must contain ("est"))
+    assertValid(all(List(testString)) must contain ("est"))
 
   }
 
@@ -124,21 +138,14 @@ class Tests extends AnyFlatSpec
      val patient =
        Patient(randomUUID,Some(Gender.Other),Some(LocalDate.now.minusYears(42)),"Max Mustermensch")
 
-     assert(patient must be (valid))
+     assertValid(patient must be (valid))
 
 
-     val validation2 =
-       validate(Patient(randomUUID,None,Some(LocalDate.now),""))
-
-     assert(validation2.isInvalid)
-
-     assert(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid)))
+     assertValid(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid)))
 
      val patients = List(patient,patient,patient)
 
-     assert(all(patients) must be (valid))
-
-
+     assertValid(all(patients) must be (valid))
 
   }
 
