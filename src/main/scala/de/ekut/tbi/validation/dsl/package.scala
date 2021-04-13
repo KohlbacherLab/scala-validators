@@ -64,12 +64,20 @@ package object dsl
 
 
 
+/*
+  sealed trait VBJunction[+E,LC[_],RC[_]] extends ValidatorBuilder[E,Both[LC,RC]#Of]{
+    def apply[T: Constraint]: Validator[E,T]
+  }
+*/
+
   type Given[U] = { type Equals[T] = T =:= U }
 
+  type And[LC[_],RC[_]] = { type Both[T] = (LC[T],RC[T]) }
 
-  sealed trait VBJunction[+E,LC[_],RC[_]]{
-    def apply[T: LC: RC]: Validator[E,T]
-  }
+
+  type VBJunction[+E,LC[_],RC[_]] = ValidatorBuilder[E, (LC And RC)#Both]
+
+  implicit def apply[T,LC[_],RC[_]](implicit lc: LC[T], rc: RC[T]): (LC[T],RC[T]) = (lc,rc)
 
 
   implicit class ValidatorBuilderLogicOps[E,LC[_]](val left: ValidatorBuilder[E,LC]) extends AnyVal
@@ -77,26 +85,38 @@ package object dsl
 
     def or[EE >: E, RC[_]](right: => ValidatorBuilder[EE,RC]): VBJunction[EE,LC,RC] =
       new VBJunction[EE,LC,RC]{
-        def apply[T: LC: RC]: Validator[EE,T] =
-          t => left.apply[T].apply(t) orElse right.apply[T].apply(t)
+        def apply[T](implicit c: Constraint[T]): Validator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            left.apply[T].apply(t) orElse right.apply[T].apply(t)
+        }
       }
 
     def or[EE >: E, U](right: Validator[EE,U]): VBJunction[EE,LC,Given[U]#Equals] =
       new VBJunction[EE,LC,Given[U]#Equals]{
-        def apply[T: LC: Given[U]#Equals]: Validator[EE,T] =
-          t => left.apply[T].apply(t) orElse right(t).asInstanceOf[ValidatedNel[EE,T]]
+        def apply[T](implicit c: Constraint[T]): Validator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            left.apply[T].apply(t) orElse right(t).asInstanceOf[ValidatedNel[EE,T]]
+        }
       }
 
     def and[EE >: E, RC[_]](right: ValidatorBuilder[EE,RC]): VBJunction[EE,LC,RC] =
       new VBJunction[EE,LC,RC]{
-        def apply[T: LC: RC]: Validator[EE,T] =
-          t => (left.apply[T].apply(t),right.apply[T].apply(t)).mapN((_,_) => t)
+        def apply[T](implicit c: Constraint[T]): Validator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            (left.apply[T].apply(t),right.apply[T].apply(t)).mapN((_,_) => t)
+        }
       }
 
     def and[EE >: E, U](right: Validator[EE,U]): VBJunction[EE,LC,Given[U]#Equals] =
       new VBJunction[EE,LC,Given[U]#Equals]{
-        def apply[T: LC: Given[U]#Equals]: Validator[EE,T] =
-          t => (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[EE,T]]).mapN((_,_) => t)
+        def apply[T](implicit c: Constraint[T]): Validator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[EE,T]]).mapN((_,_) => t)
+        }
       }
 
 /*

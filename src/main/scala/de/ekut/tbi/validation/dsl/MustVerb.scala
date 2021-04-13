@@ -30,6 +30,7 @@ sealed trait MustOps[T,R]
 
   def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]): ValidatedNel[E,R]
 
+//  def must[E,C[_]](vb: ValidatorBuilder[E,C])(implicit cc: C[T]): ValidatedNel[E,R]
 }
 
 
@@ -45,8 +46,8 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
   override def must[E](be: Validator[E,T]) = be(t)
 
 
-  def must(matchRegex: Validator[String,String])(implicit str: T =:= String) =
-    matchRegex(t)
+  def must(regexMatch: Validator[String,String])(implicit str: T =:= String) =
+    regexMatch(t)
 
 
   override def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
@@ -57,6 +58,9 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
 
   override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
     junction.apply[T].apply(t)
+
+//  override def must[E,C[_]](vb: ValidatorBuilder[E,C])(implicit cc: C[T]) =
+//    vb.apply[T].apply(t)
 
 }
 
@@ -89,4 +93,6 @@ final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) ext
   override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
     ts.traverse(junction.apply[T])
 
+//  override def must[E,C[_]](vb: ValidatorBuilder[E,C])(implicit cc: C[T]) = 
+//     ts.traverse(vb.apply[T])
 }

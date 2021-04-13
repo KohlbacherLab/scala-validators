@@ -90,6 +90,8 @@ class Tests extends AnyFlatSpec
 
     assertValid(-4 must (be (positive) or (be (even))))
 
+    assertValid(3 must (be (negative) or (be (positive) and be (odd))))
+
     assertValid(3 must (be (even) or (be (positive))))
 
     assertValid(-3 must not (be (even) or (be (positive))))

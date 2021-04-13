@@ -5,9 +5,6 @@ package de.ekut.tbi.validation
 import java.time.LocalDate
 import java.util.UUID
 
-//import cats.syntax.apply._
-//import cats.instances.list._
-
 
 
 object Gender extends Enumeration
