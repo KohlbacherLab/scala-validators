@@ -80,8 +80,8 @@ object Validator
 
     }
 
-/*
 
+/*
   import cats.syntax.apply._
   import cats.instances.list._
 
@@ -95,7 +95,6 @@ object Validator
       def apply(t: T) = f(t).mapN { case _: Product => t }
 
     }
-
 
   implicit def from3Validations[Err,T,A,B,C](
     f: T => Tuple3[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C]]

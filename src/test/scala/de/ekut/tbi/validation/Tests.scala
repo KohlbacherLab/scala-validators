@@ -5,6 +5,8 @@ package de.ekut.tbi.validation
 import java.util.UUID.randomUUID
 import java.time._
 
+import scala.util.Try
+
 import org.scalatest.flatspec.AnyFlatSpec
 
 import cats.data.Validated
@@ -52,6 +54,11 @@ class Tests extends AnyFlatSpec
     assertValid(None must be (empty))
 
 
+  }
+
+  "Try validations" must "work as expected" in {
+
+    assertValid(Try(42) must be (success))
   }
 
 

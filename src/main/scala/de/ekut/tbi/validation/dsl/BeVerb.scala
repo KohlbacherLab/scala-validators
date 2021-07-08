@@ -109,6 +109,12 @@ sealed trait BeVerb
     }
 
 
+  def apply(success: SuccessWord): BeClause[SuccessWord#Constraint] =
+    new BeClause[SuccessWord#Constraint]{
+      def apply[T: SuccessWord#Constraint] = success.apply[T]
+    }
+
+
   def apply[Constraint[_]](nw: NumericWord[Constraint]): BeClause[Constraint] =
     new BeClause[Constraint]{ 
       def apply[T: Constraint] = nw.apply[T]

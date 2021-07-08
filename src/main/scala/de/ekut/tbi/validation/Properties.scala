@@ -1,8 +1,8 @@
 package de.ekut.tbi.validation
 
 
-import cats.data.Validated.condNel
 
+import cats.data.Validated.condNel
 
 
 sealed trait Unconstrained[-T]
@@ -36,6 +36,25 @@ object CanBeDefined
     }
 */
 
+}
+
+
+trait CanBeSuccess[-T]{
+  def isSuccess(t: T): Boolean
+}
+
+object CanBeSuccess
+{
+  def apply[T](implicit cbd: CanBeSuccess[T]) = cbd
+
+  implicit def hasMethodIsSuccess[T <: AnyRef { def isSuccess: Boolean }]: CanBeSuccess[T] =
+    new CanBeSuccess[T]{
+
+      import scala.language.reflectiveCalls
+
+      def isSuccess(t: T) = t.asInstanceOf[{ def isSuccess: Boolean }].isSuccess
+
+    }
 }
 
 
