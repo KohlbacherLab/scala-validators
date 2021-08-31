@@ -19,10 +19,8 @@ sealed trait MustOps[T,R]
 
   def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[Any,R]
 
-//  def must[E](be: BeValidator[E,T]): ValidatedNel[E,R]
   def must[E](be: Validator[E,T]): ValidatedNel[E,R]
 
-//  def must(matchRegex: Validator[String,String])(implicit str: T =:= String): ValidatedNel[String,R]
 
   def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]): ValidatedNel[String,R]
 
@@ -35,6 +33,7 @@ sealed trait MustOps[T,R]
 
 
 
+//final case class MustVerb[T](t: T) extends MustOps[T,T]
 final class MustVerb[T](val t: T) extends MustOps[T,T]
 {
 
@@ -42,7 +41,6 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
     beClause.apply[T].apply(t)
 
 
-//  override def must[E](be: BeValidator[E,T]) = be(t)
   override def must[E](be: Validator[E,T]) = be(t)
 
 
@@ -66,6 +64,7 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
 
 
 
+//final case class MustVerbTraversable[T,C[T]: Traverse] private[dsl](ts: C[T]) extends MustOps[T,C[T]]
 final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends MustOps[T,C[T]]
 {
 
@@ -73,7 +72,6 @@ final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) ext
     ts.traverse(beClause.apply[T])
 
 
-//  override def must[E](be: BeValidator[E,T]) =
   override def must[E](be: Validator[E,T]) =
     ts.traverse(be)
 

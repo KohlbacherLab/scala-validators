@@ -8,13 +8,15 @@ import cats.data.Validated.condNel
 trait Validator[+E,T] extends (T => ValidatedNel[E,T])
 
 trait NegatableValidator[+E,T] extends Validator[E,T]
+  with Negatable[NegatableValidator[E,T]]
+/*
 {
 
   type Type <: NegatableValidator[E,T]
 
   def negated: Type
 }
-
+*/
 
 object Validator
 {
@@ -80,33 +82,6 @@ object Validator
 
     }
 
-
-/*
-  import cats.syntax.apply._
-  import cats.instances.list._
-
-  implicit def from2Validations[Err,T,A,B](
-    f: T => Tuple2[ValidatedNel[Err,A],ValidatedNel[Err,B]]
-  ): Validator[Err,T] =
-    new Validator[Err,T]{ self =>
-
-      type Type = Validator[Err,T]
-
-      def apply(t: T) = f(t).mapN { case _: Product => t }
-
-    }
-
-  implicit def from3Validations[Err,T,A,B,C](
-    f: T => Tuple3[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C]]
-  ): Validator[Err,T] =
-    new Validator[Err,T]{ self =>
-
-      type Type = Validator[Err,T]
-
-      def apply(t: T) = f(t).mapN { case _: Product => t }
-
-    }
-*/
 }
 
 

@@ -29,7 +29,6 @@ class Tests extends AnyFlatSpec
 
 
   val even = Validator[String,Int](n => n%2 == 0)(n => s"$n is not even", n => s"$n is even")
-//  val even: Validator[String,Int] = n => Validated.condNel(n%2 == 0, n, s"$n is not even")
 
   val odd = not (even)
 
@@ -67,6 +66,10 @@ class Tests extends AnyFlatSpec
     val oneToTen = 1 to 10
 
     assertValid(oneToTen must have (size (10)))
+
+    assertValid(oneToTen must not (contain (11)))
+
+    assertValid(11 must not (be (in (oneToTen))))
 
     assertValid(oneToTen must contain (anyOf (2,20,200)))
 
@@ -138,6 +141,8 @@ class Tests extends AnyFlatSpec
 
     assertValid(all(List(testString)) must contain ("est"))
 
+    assertValid(new MustVerb("foo") must not (be (in (List(testString)))))
+//    assertValid(MustVerb("foo") must not (be (in (List(testString)))))
   }
 
 
@@ -146,9 +151,17 @@ class Tests extends AnyFlatSpec
 
      val patient =
        Patient(randomUUID,Some(Gender.Other),Some(LocalDate.now.minusYears(42)),"Max Mustermensch")
+/*
+     assertValid(patient must be (valid[Issue]))
+
+     assertValid(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid[Issue])))
+
+     val patients = List(patient,patient,patient)
+
+     assertValid(all(patients) must be (valid[Issue]))
+*/
 
      assertValid(patient must be (valid))
-
 
      assertValid(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid)))
 

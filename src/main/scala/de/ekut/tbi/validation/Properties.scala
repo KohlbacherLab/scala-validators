@@ -2,6 +2,7 @@ package de.ekut.tbi.validation
 
 
 
+import cats.data.Validated
 import cats.data.Validated.condNel
 
 
@@ -29,12 +30,6 @@ object CanBeDefined
       def isDefined(t: T) = t.asInstanceOf[{ def isDefined: Boolean }].isDefined
 
     }
-/*
-  implicit def isNotNull[T](implicit notHasIsDefined: T <:!< AnyRef { def isDefined: Boolean }): CanBeDefined[T] =
-    new CanBeDefined[T]{
-      def isDefined(t: T) = t != null
-    }
-*/
 
 }
 
@@ -54,6 +49,11 @@ object CanBeSuccess
 
       def isSuccess(t: T) = t.asInstanceOf[{ def isSuccess: Boolean }].isSuccess
 
+    }
+
+  implicit def validatedSuccess[E,T]: CanBeSuccess[Validated[E,T]] =
+    new CanBeSuccess[Validated[E,T]]{
+      def isSuccess(v: Validated[E,T]) = v.isValid
     }
 }
 

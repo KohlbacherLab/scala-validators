@@ -9,6 +9,7 @@ import cats.data.{
 import cats.Traverse
 import cats.syntax.traverse._
 import cats.syntax.apply._
+import cats.syntax.either._
 import cats.instances.list._
 
 import de.ekut.tbi.validation.{
@@ -43,8 +44,18 @@ package object dsl
 
   final val nonEmpty = not (empty)
 
+/*
+  import cats.data.Validated._
 
+  implicit class OptionOps[T](val opt: Option[T]) extends AnyVal
+  {
+    def value: ValidatedNel[String,T] =
+      opt.fold(invalidNel[String,T]("No value on undefined Option"))(validNel[String,T](_))
 
+    def valueOr[E](e: => E): ValidatedNel[E,T] =
+      opt.fold(invalidNel[String,E](e))(validNel[E,T](_))
+  }
+*/
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
   {
