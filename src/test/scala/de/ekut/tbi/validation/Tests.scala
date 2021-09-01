@@ -141,8 +141,8 @@ class Tests extends AnyFlatSpec
 
     assertValid(all(List(testString)) must contain ("est"))
 
-    assertValid(new MustVerb("foo") must not (be (in (List(testString)))))
-//    assertValid(MustVerb("foo") must not (be (in (List(testString)))))
+    assertValid(Subject("foo") must not (be (in (List(testString)))))
+
   }
 
 
@@ -151,15 +151,6 @@ class Tests extends AnyFlatSpec
 
      val patient =
        Patient(randomUUID,Some(Gender.Other),Some(LocalDate.now.minusYears(42)),"Max Mustermensch")
-/*
-     assertValid(patient must be (valid[Issue]))
-
-     assertValid(Patient(randomUUID,None,Some(LocalDate.now),"") must not (be (valid[Issue])))
-
-     val patients = List(patient,patient,patient)
-
-     assertValid(all(patients) must be (valid[Issue]))
-*/
 
      assertValid(patient must be (valid))
 

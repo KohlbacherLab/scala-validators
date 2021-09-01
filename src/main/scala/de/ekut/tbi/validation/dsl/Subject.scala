@@ -14,7 +14,7 @@ import de.ekut.tbi.validation.{
 }
 
 
-sealed trait MustOps[T,R]
+sealed trait SubjectOps[T,R]
 {
 
   def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[Any,R]
@@ -33,8 +33,8 @@ sealed trait MustOps[T,R]
 
 
 
-//final case class MustVerb[T](t: T) extends MustOps[T,T]
-final class MustVerb[T](val t: T) extends MustOps[T,T]
+//final class Subject[T](val t: T) extends SubjectOps[T,T]
+final case class Subject[T](t: T) extends SubjectOps[T,T]
 {
 
   override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) =
@@ -64,8 +64,8 @@ final class MustVerb[T](val t: T) extends MustOps[T,T]
 
 
 
-//final case class MustVerbTraversable[T,C[T]: Traverse] private[dsl](ts: C[T]) extends MustOps[T,C[T]]
-final class MustVerbTraversable[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends MustOps[T,C[T]]
+//final class TraversableSubject[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends SubjectOps[T,C[T]]
+final case class TraversableSubject[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends SubjectOps[T,C[T]]
 {
 
   override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) =

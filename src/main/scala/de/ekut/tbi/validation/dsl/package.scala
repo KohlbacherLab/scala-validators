@@ -31,12 +31,12 @@ package object dsl
   import scala.language.implicitConversions
 
 
-  implicit def toMustVerb[T](t: T): MustVerb[T] = new MustVerb(t)
+  implicit def toSubject[T](t: T): Subject[T] = new Subject(t)
 
 
-  def all[T,C[T]: Traverse](ts: C[T]): MustVerbTraversable[T,C] = new MustVerbTraversable(ts)
+  def all[T,C[T]: Traverse](ts: C[T]): TraversableSubject[T,C] = new TraversableSubject(ts)
 
-  def all[T](t1: T, t2: T, ts: T*): MustVerbTraversable[T,List] = all((t1 +: t2 +: ts).toList)
+  def all[T](t1: T, t2: T, ts: T*): TraversableSubject[T,List] = all((t1 +: t2 +: ts).toList)
 
 
 
