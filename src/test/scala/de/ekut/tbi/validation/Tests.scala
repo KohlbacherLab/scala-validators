@@ -77,6 +77,10 @@ class Tests extends AnyFlatSpec
 
     assertValid(oneToTen must (contain (allOf (2,5,7)) and not (contain (anyOf(20,21,22)))))
 
+    assertValid(oneToTen must not (contain (8) and (contain (11))))
+
+    assertValid(oneToTen must not (contain (11) or (contain (12))))
+
     assertValid(4 must be (in (oneToTen)))
 
     assertValid(all(oneToTen.toList) must be (positive))

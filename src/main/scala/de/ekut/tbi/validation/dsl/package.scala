@@ -4,6 +4,7 @@ package de.ekut.tbi.validation
 
 import cats.data.{
   NonEmptyList,
+  Validated,
   ValidatedNel
 }
 import cats.Traverse
@@ -44,18 +45,6 @@ package object dsl
 
   final val nonEmpty = not (empty)
 
-/*
-  import cats.data.Validated._
-
-  implicit class OptionOps[T](val opt: Option[T]) extends AnyVal
-  {
-    def value: ValidatedNel[String,T] =
-      opt.fold(invalidNel[String,T]("No value on undefined Option"))(validNel[String,T](_))
-
-    def valueOr[E](e: => E): ValidatedNel[E,T] =
-      opt.fold(invalidNel[String,E](e))(validNel[E,T](_))
-  }
-*/
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
   {
@@ -75,12 +64,6 @@ package object dsl
 
 
 
-/*
-  sealed trait VBJunction[+E,LC[_],RC[_]] extends ValidatorBuilder[E,Both[LC,RC]#Of]{
-    def apply[T: Constraint]: Validator[E,T]
-  }
-*/
-
   type Given[U] = { type Equals[T] = T =:= U }
 
   type And[LC[_],RC[_]] = { type Both[T] = (LC[T],RC[T]) }
@@ -88,9 +71,152 @@ package object dsl
 
   type VBJunction[+E,LC[_],RC[_]] = ValidatorBuilder[E, (LC And RC)#Both]
 
+  type NegatableVBJunction[+E,LC[_],RC[_]] = NegatableValidatorBuilder[E, (LC And RC)#Both]
+
+
   implicit def apply[T,LC[_],RC[_]](implicit lc: LC[T], rc: RC[T]): (LC[T],RC[T]) = (lc,rc)
 
 
+  implicit class NegatableValidatorBuilderLogicOps[E, LC[_]](
+    val left: NegatableValidatorBuilder[E,LC]
+  )(
+    implicit error: String => E
+  )
+  {
+
+    def or[EE >: E, RC[_]](right: => NegatableValidatorBuilder[EE,RC]): NegatableVBJunction[EE,LC,RC] =
+      new NegatableVBJunction[EE,LC,RC]{ self =>
+
+        type Type = NegatableVBJunction[EE,LC,RC]
+
+        def apply[T](implicit c: Constraint[T]): NegatableValidator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            left.apply[T].apply(t) orElse right.apply[T].apply(t)
+        }
+
+        def negated =
+          new NegatableVBJunction[EE,LC,RC]{
+
+            type Type = NegatableVBJunction[EE,LC,RC]
+
+            def apply[T](implicit c: Constraint[T]) = {
+              t =>
+                implicit val (lc,rc) = c
+
+                Validated.condNel(
+//                  !(left.apply[T].apply(t) andThen (right.apply[T].apply)).isValid,
+                  !(left.apply[T].apply(t).isValid) && !(right.apply[T].apply(t).isValid),
+                  t,
+                  error(s"$t must not have been valid")
+                ) 
+            }
+
+            def negated = self
+          }
+      }
+
+    def or[EE >: E, U](right: NegatableValidator[EE,U]): NegatableVBJunction[EE,LC,Given[U]#Equals] =
+      new NegatableVBJunction[EE,LC,Given[U]#Equals]{ self =>
+
+        type Type = NegatableVBJunction[EE,LC,Given[U]#Equals]
+
+        def apply[T](implicit c: Constraint[T]): NegatableValidator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            left.apply[T].apply(t) orElse right(t).asInstanceOf[ValidatedNel[EE,T]]
+        }
+
+        def negated =
+          new NegatableVBJunction[EE,LC,Given[U]#Equals]{
+
+            type Type = NegatableVBJunction[EE,LC,Given[U]#Equals]
+
+            def apply[T](implicit c: Constraint[T]) = {
+              t =>
+                implicit val (lc,rc) = c
+
+                Validated.condNel(
+//                  !(left.apply[T].apply(t) andThen (right(_).asInstanceOf[ValidatedNel[EE,T]])).isValid,
+                  !(left.apply[T].apply(t)).isValid && !(right(t).isValid),
+                  t,
+                  error(s"$t must not have been valid")
+                ) 
+            }
+
+            def negated = self
+          }
+
+      }
+
+    def and[EE >: E, RC[_]](right: NegatableValidatorBuilder[EE,RC]): NegatableVBJunction[EE,LC,RC] =
+      new NegatableVBJunction[EE,LC,RC]{ self =>
+
+        type Type = NegatableVBJunction[EE,LC,RC]
+
+        def apply[T](implicit c: Constraint[T]): NegatableValidator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            (left.apply[T].apply(t),right.apply[T].apply(t)).mapN((_,_) => t)
+        }
+
+        def negated =
+          new NegatableVBJunction[EE,LC,RC]{
+
+            type Type = NegatableVBJunction[EE,LC,RC]
+
+            def apply[T](implicit c: Constraint[T]) = {
+              t =>
+                implicit val (lc,rc) = c
+
+                Validated.condNel(
+//                  !(left.apply[T].apply(t) orElse (right.apply[T].apply(t))).isValid,
+                  !(left.apply[T].apply(t).isValid) || !(right.apply[T].apply(t).isValid),
+                  t,
+                  error(s"$t must not have been valid")
+                ) 
+            }
+
+            def negated = self
+          }
+      }
+
+    def and[EE >: E, U](right: NegatableValidator[EE,U]): NegatableVBJunction[EE,LC,Given[U]#Equals] =
+      new NegatableVBJunction[EE,LC,Given[U]#Equals]{ self =>
+
+        type Type = NegatableVBJunction[EE,LC,Given[U]#Equals]
+
+        def apply[T](implicit c: Constraint[T]): NegatableValidator[EE,T] = {
+          t =>
+            implicit val (lc,rc) = c
+            (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[EE,T]]).mapN((_,_) => t)
+        }
+
+        def negated =
+          new NegatableVBJunction[EE,LC,Given[U]#Equals]{
+
+            type Type = NegatableVBJunction[EE,LC,Given[U]#Equals]
+
+            def apply[T](implicit c: Constraint[T]) = {
+              t =>
+                implicit val (lc,rc) = c
+
+                Validated.condNel(
+//                  !(left.apply[T].apply(t) orElse (right(t).asInstanceOf[ValidatedNel[EE,T]])).isValid,
+                  !(left.apply[T].apply(t).isValid) || !(right(t).isValid),
+                  t,
+                  error(s"$t must not have been valid")
+                ) 
+            }
+
+            def negated = self
+          }
+
+      }
+
+  }
+
+  
   implicit class ValidatorBuilderLogicOps[E,LC[_]](val left: ValidatorBuilder[E,LC]) extends AnyVal
   {
 
@@ -130,31 +256,6 @@ package object dsl
         }
       }
 
-/*
-    def or[RC[_]](right: => ValidatorBuilder[E,RC]): VBJunction[E,LC,RC] =
-      new VBJunction[E,LC,RC]{
-        def apply[T: LC: RC]: Validator[E,T] =
-          t => left.apply[T].apply(t) orElse right.apply[T].apply(t)
-      }
-
-    def or[U](right: Validator[E,U]): VBJunction[E,LC,Given[U]#Equals] =
-      new VBJunction[E,LC,Given[U]#Equals]{
-        def apply[T: LC: Given[U]#Equals]: Validator[E,T] =
-          t => left.apply[T].apply(t) orElse right(t).asInstanceOf[ValidatedNel[E,T]]
-      }
-
-    def and[RC[_]](right: ValidatorBuilder[E,RC]): VBJunction[E,LC,RC] =
-      new VBJunction[E,LC,RC]{
-        def apply[T: LC: RC]: Validator[E,T] =
-          t => (left.apply[T].apply(t),right.apply[T].apply(t)).mapN((_,_) => t)
-      }
-
-    def and[U](right: Validator[E,U]): VBJunction[E,LC,Given[U]#Equals] =
-      new VBJunction[E,LC,Given[U]#Equals]{
-        def apply[T: LC: Given[U]#Equals]: Validator[E,T] =
-          t => (left.apply[T].apply(t),right(t).asInstanceOf[ValidatedNel[E,T]]).mapN((_,_) => t)
-      }
-*/
   }
 
   

@@ -19,11 +19,6 @@ trait ValidatorBuilder[+E,C[_]]
 trait NegatableValidatorBuilder[+E,C[_]] extends ValidatorBuilder[E,C] with Negatable[NegatableValidatorBuilder[E,C]]
 {
 
-//  type Type <: NegatableValidatorBuilder[E,C]
-
   def apply[T: Constraint]: NegatableValidator[E,T]
 
-//  def negated: Type
-
 }
-

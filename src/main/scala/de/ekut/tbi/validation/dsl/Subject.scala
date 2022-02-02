@@ -26,14 +26,14 @@ sealed trait SubjectOps[T,R]
 
   def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]): ValidatedNel[String,R]
 
+  def must[E,LC[_],RC[_]](junction: NegatableVBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]): ValidatedNel[E,R]
+
   def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]): ValidatedNel[E,R]
 
-//  def must[E,C[_]](vb: ValidatorBuilder[E,C])(implicit cc: C[T]): ValidatedNel[E,R]
 }
 
 
 
-//final class Subject[T](val t: T) extends SubjectOps[T,T]
 final case class Subject[T](t: T) extends SubjectOps[T,T]
 {
 
@@ -54,17 +54,16 @@ final case class Subject[T](t: T) extends SubjectOps[T,T]
   override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
     clause.apply[T].apply(t)
 
-  override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+  override def must[E,LC[_],RC[_]](junction: NegatableVBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
     junction.apply[T].apply(t)
 
-//  override def must[E,C[_]](vb: ValidatorBuilder[E,C])(implicit cc: C[T]) =
-//    vb.apply[T].apply(t)
+  override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+    junction.apply[T].apply(t)
 
 }
 
 
 
-//final class TraversableSubject[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends SubjectOps[T,C[T]]
 final case class TraversableSubject[T,C[T]: Traverse] private[dsl](val ts: C[T]) extends SubjectOps[T,C[T]]
 {
 
@@ -87,10 +86,10 @@ final case class TraversableSubject[T,C[T]: Traverse] private[dsl](val ts: C[T])
   override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
     ts.traverse(clause.apply[T])
 
+  override def must[E,LC[_],RC[_]](junction: NegatableVBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+    ts.traverse(junction.apply[T])
 
   override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
     ts.traverse(junction.apply[T])
 
-//  override def must[E,C[_]](vb: ValidatorBuilder[E,C])(implicit cc: C[T]) = 
-//     ts.traverse(vb.apply[T])
 }

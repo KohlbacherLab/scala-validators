@@ -39,3 +39,5 @@ sealed trait SuccessWord extends NegatableValidatorBuilder[String,CanBeSuccess]
 
 final case object success extends SuccessWord
 
+final case object successful extends SuccessWord
+

@@ -46,6 +46,7 @@ sealed trait ValidWord extends ValidatorBuilder[Any,HasValidator]
 final object valid extends ValidWord
 */
 
+
 sealed trait BeClause[C[_]] extends NegatableValidatorBuilder[Any,C]
 {
   self =>

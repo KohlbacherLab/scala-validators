@@ -16,6 +16,24 @@ import de.ekut.tbi.validation.{
 
 
 
+
+final class SizeWord private[dsl](val value: Int) extends AnyVal
+
+object size
+{
+  def apply(l: Int): SizeWord = {
+    new SizeWord(l)
+  }
+}
+
+object length
+{
+  def apply(l: Int): SizeWord = {
+    new SizeWord(l)
+  }
+}
+
+/*
 sealed trait SizeWord
 {
   val value: Int
@@ -34,8 +52,7 @@ object length
     new SizeWord{ val value = l }
   }
 }
-
-
+*/
 
 
 sealed trait HaveClause[C[_]] extends NegatableValidatorBuilder[String,C]
