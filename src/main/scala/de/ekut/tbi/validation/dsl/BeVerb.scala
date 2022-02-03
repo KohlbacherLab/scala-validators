@@ -185,21 +185,18 @@ sealed trait BeVerb
     )
 
 
-//  def apply(defined: DefinedWord): BeClause[DefinedWord#Constraint] =
   def apply(defined: DefinedWord): BeClause[DefinedWord#Constraint] =
     new BeClause[DefinedWord#Constraint]{
       def apply[T: DefinedWord#Constraint] = defined.apply[T]
     }
 
 
-//  def apply(success: SuccessWord): BeClause[SuccessWord#Constraint] =
   def apply(success: SuccessWord): BeClause[SuccessWord#Constraint] =
     new BeClause[SuccessWord#Constraint]{
       def apply[T: SuccessWord#Constraint] = success.apply[T]
     }
 
 
-//  def apply[Constraint[_]](nw: NumericWord[Constraint]): BeClause[Constraint] =
   def apply[Constraint[_]](nw: NumericWord[Constraint]): BeClause[Constraint] =
     new BeClause[Constraint]{ 
       def apply[T: Constraint] = nw.apply[T]
@@ -207,7 +204,6 @@ sealed trait BeVerb
 
 
 
-//  def apply[U](v: IsInstanceClause[U]): BeClause[Unconstrained] = 
   def apply[U](v: IsInstanceClause[U]): BeClause[Unconstrained] = 
     new BeClause[Unconstrained]{
       def apply[T: Unconstrained] = v.apply[T]
@@ -216,19 +212,16 @@ sealed trait BeVerb
     
 
 
-//  def apply[E,T](v: NegatableValidator[E,T]): BeValidator[E,T] = 
   def apply[E,T](v: NegatableValidator[E,T]): BeValidator[E,T] = 
     BeValidator(v)
 
 
-//  def apply(empty: EmptyWord): BeClause[EmptyWord#Constraint] =
   def apply(empty: EmptyWord): BeClause[EmptyWord#Constraint] =
     new BeClause[EmptyWord#Constraint]{
       def apply[T: EmptyWord#Constraint] = empty.apply[T]
     }
 
 
-//  def apply[U](in: InWord[U]): BeClause[InWord[U]#Constraint] =
   def apply[U](in: InWord[U]): BeClause[InWord[U]#Constraint] =
     new BeClause[InWord[U]#Constraint]{
       def apply[T: InWord[U]#Constraint] = in.apply[T]

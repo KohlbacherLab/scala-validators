@@ -9,14 +9,6 @@ trait Validator[+E,T] extends (T => ValidatedNel[E,T])
 
 trait NegatableValidator[+E,T] extends Validator[E,T]
   with Negatable[NegatableValidator[E,T]]
-/*
-{
-
-  type Type <: NegatableValidator[E,T]
-
-  def negated: Type
-}
-*/
 
 object Validator
 {

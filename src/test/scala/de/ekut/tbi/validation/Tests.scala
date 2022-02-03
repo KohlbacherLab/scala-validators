@@ -79,7 +79,15 @@ class Tests extends AnyFlatSpec
 
     assertValid(oneToTen must not (contain (8) and (contain (11))))
 
+    assertValid(oneToTen must (contain (11) or (have (size (lessThan(11))))))
+    assertValid(oneToTen must (have (size (lessThan(11))) or (contain (11))))
+
     assertValid(oneToTen must not (contain (11) or (contain (12))))
+
+    assert(
+      (oneToTen must not (contain (8) and (contain (11)))) ==
+      (oneToTen must (not (contain (8)) or (not (contain (11)))))
+    )
 
     assertValid(4 must be (in (oneToTen)))
 
