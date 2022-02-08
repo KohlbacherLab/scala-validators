@@ -23,7 +23,8 @@ package object dsl
 {
 
 
-  def validate[E,T](t: T)(implicit validator: Validator[E,T]) = validator(t)
+  def validate[E,T](t: T)(implicit validator: Validator[E,T]) =
+    validator(t)
 
   def validateEach[T,E,C[T]: Traverse](ts: C[T])(implicit v: Validator[E,T]) =
     ts.traverse(v)
@@ -32,23 +33,35 @@ package object dsl
   import scala.language.implicitConversions
 
 
-  implicit def toSubject[T](t: T): Subject[T] = new Subject(t)
+  implicit def toSubject[T](t: T): Subject[T] =
+    new Subject(t)
 
 
-  def all[T,C[T]: Traverse](ts: C[T]): TraversableSubject[T,C] = new TraversableSubject(ts)
+  def all[T,C[T]: Traverse](ts: C[T]): TraversableSubject[T,C] =
+    new TraversableSubject(ts)
 
-  def all[T](t1: T, t2: T, ts: T*): TraversableSubject[T,List] = all((t1 +: t2 +: ts).toList)
+  def all[T](t1: T, t2: T, ts: T*): TraversableSubject[T,List] =
+    all((t1 +: t2 +: ts).toList)
 
 
+  def valueIn[T](opt: Option[T]): OptionSubject[T] =
+    OptionSubject(opt) 
 
-  final val undefined = not (defined)
+  def option[T](opt: Option[T]): OptionSubject[T] =
+    valueIn(opt)
 
-  final val nonEmpty = not (empty)
+
+  final val undefined =
+    not (defined)
+
+  final val nonEmpty =
+    not (empty)
 
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
   {
-    def validateEach[E](implicit v: Validator[E,T]) = ts.traverse(v)
+    def validateEach[E](implicit v: Validator[E,T]) =
+      ts.traverse(v)
   }
 
 
@@ -105,7 +118,6 @@ package object dsl
                 implicit val (lc,rc) = c
 
                 Validated.condNel(
-//                  !(left.apply[T].apply(t) andThen (right.apply[T].apply)).isValid,
                   !(left.apply[T].apply(t).isValid) && !(right.apply[T].apply(t).isValid),
                   t,
                   error(s"$t must not have been valid")
@@ -137,7 +149,6 @@ package object dsl
                 implicit val (lc,rc) = c
 
                 Validated.condNel(
-//                  !(left.apply[T].apply(t) andThen (right(_).asInstanceOf[ValidatedNel[EE,T]])).isValid,
                   !(left.apply[T].apply(t)).isValid && !(right(t).isValid),
                   t,
                   error(s"$t must not have been valid")
@@ -170,7 +181,6 @@ package object dsl
                 implicit val (lc,rc) = c
 
                 Validated.condNel(
-//                  !(left.apply[T].apply(t) orElse (right.apply[T].apply(t))).isValid,
                   !(left.apply[T].apply(t).isValid) || !(right.apply[T].apply(t).isValid),
                   t,
                   error(s"$t must not have been valid")
@@ -202,7 +212,6 @@ package object dsl
                 implicit val (lc,rc) = c
 
                 Validated.condNel(
-//                  !(left.apply[T].apply(t) orElse (right(t).asInstanceOf[ValidatedNel[EE,T]])).isValid,
                   !(left.apply[T].apply(t).isValid) || !(right(t).isValid),
                   t,
                   error(s"$t must not have been valid")

@@ -28,10 +28,11 @@ class Tests extends AnyFlatSpec
   private def assertInvalid[E,A](v: Validated[E,A]) = assert(v.isInvalid)
 
 
-  val even = Validator[String,Int](n => n%2 == 0)(n => s"$n is not even", n => s"$n is even")
+  val even =
+    Validator[String,Int](n => n%2 == 0)(n => s"$n is not even", n => s"$n is even")
 
-  val odd = not (even)
-
+  val odd =
+    not (even)
 
 
   "Option validations" must "work as expected" in {
@@ -52,6 +53,9 @@ class Tests extends AnyFlatSpec
 
     assertValid(None must be (empty))
 
+    assertValid(valueIn(Option(42)) must be (positive))
+
+    assertValid(valueIn(None.asInstanceOf[Option[Int]]) must be (positive))
 
   }
 
@@ -83,11 +87,6 @@ class Tests extends AnyFlatSpec
     assertValid(oneToTen must (have (size (lessThan(11))) or (contain (11))))
 
     assertValid(oneToTen must not (contain (11) or (contain (12))))
-
-    assert(
-      (oneToTen must not (contain (8) and (contain (11)))) ==
-      (oneToTen must (not (contain (8)) or (not (contain (11)))))
-    )
 
     assertValid(4 must be (in (oneToTen)))
 
