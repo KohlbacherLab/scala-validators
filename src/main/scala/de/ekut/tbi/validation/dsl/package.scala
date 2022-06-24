@@ -72,7 +72,6 @@ package object dsl
       v.leftMap(_ => NonEmptyList.one(err))
 
     def orError[EE](err: => EE) = otherwise(err)
-
   }
 
 

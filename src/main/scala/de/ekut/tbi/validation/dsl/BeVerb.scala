@@ -20,32 +20,6 @@ import de.ekut.tbi.validation.{
 }
 
 
-/*
-trait HasValidator[T]{
-  val validator: Validator[Any,T]
-}
-
-object HasValidator
-{
-  implicit def apply[T](implicit v: Validator[Any,T]): HasValidator[T] =
-    new HasValidator[T]{
-      val validator = v
-    }
-}
- 
-
-sealed trait ValidWord extends ValidatorBuilder[Any,HasValidator]
-{
-  self =>
-
-  type Type = ValidWord
-
-  def apply[T](implicit hv: Constraint[T]): Validator[Any,T] = hv.validator
-}
-  
-final object valid extends ValidWord
-*/
-
 
 sealed trait BeClause[C[_]] extends NegatableValidatorBuilder[Any,C]
 {
@@ -59,44 +33,6 @@ sealed trait BeClause[C[_]] extends NegatableValidatorBuilder[Any,C]
     }
 }
 
-
-/*
-//sealed trait BeClause[C[_], V <: ValidatorBuilder[Any,C]]
-sealed trait BeClause[C[_]]
-{
-  type V <: ValidatorBuilder[Any,C]
-
-//  this: V =>
-
-//  type Constraint[x]
-}
-
-
-sealed trait SimpleBeClause[C[_]] extends BeClause[C] with ValidatorBuilder[Any,C]
-//sealed trait SimpleBeClause[C[_]] extends BeClause[C,ValidatorBuilder[Any,C]] with ValidatorBuilder[Any,C]
-{
-  self =>
-
-  type V = ValidatorBuilder[Any,C]
-
-  type Type = SimpleBeClause[C]
-}
-
-sealed trait NegatableBeClause[C[_]] extends BeClause[C] with NegatableValidatorBuilder[Any,C]
-//sealed trait NegatableBeClause[C[_]] extends BeClause[C,NegatableValidatorBuilder[Any,C]] with NegatableValidatorBuilder[Any,C]
-{
-  self =>
-
-  type V = NegatableValidatorBuilder[Any,C]
-
-  type Type = NegatableBeClause[C]
-
-  def negated =
-    new NegatableBeClause[C]{
-      def apply[T: Constraint] = self.apply[T].negated
-    }
-}
-*/
 
 
 trait HasValidator[E,T]{
