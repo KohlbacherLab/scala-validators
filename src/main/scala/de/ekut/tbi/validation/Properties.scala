@@ -10,7 +10,7 @@ sealed trait Unconstrained[-T]
 
 object Unconstrained
 {
-  implicit def apply[T] = new Unconstrained[T]{}
+  implicit def apply[T]: Unconstrained[T] = new Unconstrained[T]{}
 }
 
 

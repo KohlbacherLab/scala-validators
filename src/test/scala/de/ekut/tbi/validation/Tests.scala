@@ -4,24 +4,16 @@ package de.ekut.tbi.validation
 
 import java.util.UUID.randomUUID
 import java.time._
-
 import scala.util.Try
-
 import org.scalatest.flatspec.AnyFlatSpec
-
 import cats.data.Validated
 import cats.instances.list._
 import cats.instances.option._
-
 import de.ekut.tbi.validation.dsl._
-
 
 
 class Tests extends AnyFlatSpec
 {
-
-  import scala.language.implicitConversions
-
 
   private def assertValid[E,A](v: Validated[E,A]) = assert(v.isValid)
 

@@ -94,13 +94,6 @@ sealed trait BeVerb
 
   self =>
 
-/*
-  def apply(valid: ValidWord): BeClause[HasValidator] =
-    new BeClause[HasValidator]{ 
-      def apply[T: HasValidator] = valid.apply[T]
-    }
-*/
-
   def apply[E](valid: ValidWord[E]): BeClause[({ type f[x] = HasValidator[E,x] })#f] =
     new BeClause[({ type f[x] = HasValidator[E,x] })#f]{ 
       def apply[T: ({ type f[x] = HasValidator[E,x] })#f] = valid.apply[T]

@@ -13,7 +13,7 @@ trait NegatableValidator[+E,T] extends Validator[E,T]
 object Validator
 {
 
-  final case class Impl[E,T]
+  private final case class Impl[E,T]
   (
     f: T => Boolean,
     mustBeTrue: Boolean,
@@ -63,7 +63,7 @@ object Validator
 
   import scala.language.implicitConversions
 
-  implicit def fromValidation[E,A](
+  implicit def from[E,A](
     f: A => ValidatedNel[E,A]
   ): Validator[E,A] =
     new Validator[E,A]{ self =>
@@ -82,7 +82,7 @@ object NegatableValidator
 
   import scala.language.implicitConversions
 
-  implicit def fromValidation[E,T](
+  implicit def from[E,T](
     f: T => ValidatedNel[E,T]
   )(
     implicit toError: String => E
