@@ -6,12 +6,26 @@ import cats.data.Validated.condNel
 
 
 trait Validator[+E,T] extends (T => ValidatedNel[E,T])
+{
+  self =>
+
+  def combineWith[EE >: E](other: Validator[EE,T]): Validator[EE,T] = {
+
+    implicit val sg: cats.Semigroup[T] =
+      cats.Semigroup.instance((t,_) => t)
+
+    t => self(t) combine other(t)
+  }
+}
 
 trait NegatableValidator[+E,T] extends Validator[E,T]
   with Negatable[NegatableValidator[E,T]]
 
+
+
 object Validator
 {
+  def apply[E,T](implicit v: Validator[E,T]): Validator[E,T] = v
 
   private final case class Impl[E,T]
   (
@@ -79,6 +93,9 @@ object Validator
 
 object NegatableValidator
 {
+
+  def apply[E,T](implicit v: NegatableValidator[E,T]): NegatableValidator[E,T] = v
+
 
   import scala.language.implicitConversions
 

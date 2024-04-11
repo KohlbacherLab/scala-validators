@@ -11,6 +11,7 @@ import cats.Traverse
 import cats.syntax.traverse._
 import cats.syntax.apply._
 import cats.syntax.either._
+import cats.syntax.validated._
 import cats.instances.list._
 
 import de.ekut.tbi.validation.{
@@ -22,17 +23,19 @@ import de.ekut.tbi.validation.{
 package object dsl
 {
 
+  import scala.language.implicitConversions
+
 
   def validate[E,T](t: T)(implicit validator: Validator[E,T]) =
     validator(t)
+
+  def validateOpt[E,T](t: Option[T])(implicit validator: Validator[E,T]) =
+    option(t) must validator
 
   def validateEach[T,E,C[T]: Traverse](ts: C[T])(implicit v: Validator[E,T]) =
     ts.traverse(v)
 
   
-  import scala.language.implicitConversions
-
-
   implicit def toSubject[T](t: T): Subject[T] =
     new Subject(t)
 
@@ -58,6 +61,14 @@ package object dsl
     not (empty)
 
 
+  def ifDefined[T,E](
+    opt: Option[T]
+  )(
+    validator: Validator[E,T]
+  ): ValidatedNel[E,Option[T]] =
+    valueIn(opt) must validator
+
+
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
   {
     def validateEach[E](implicit v: Validator[E,T]) =
@@ -69,6 +80,9 @@ package object dsl
   implicit class ValidatedOps[E,T](val v: ValidatedNel[E,T]) extends AnyVal
   {
     def otherwise[EE](err: => EE) =
+      v.leftMap(_ => NonEmptyList.one(err))
+
+    def `else`[EE](err: => EE) =
       v.leftMap(_ => NonEmptyList.one(err))
 
     def orError[EE](err: => EE) = otherwise(err)
@@ -289,8 +303,8 @@ package object dsl
 
 
 
-  implicit class ValidatedTuple2Ops[Err,A,B](
-    val vs: Tuple2[ValidatedNel[Err,A],ValidatedNel[Err,B]]
+  implicit class ValidatedTuple2Ops[Err](
+    val vs: Tuple2[ValidatedNel[Err,_],ValidatedNel[Err,_]]
   ) extends AnyVal
   {
     def errorsOr[T](t: => T): ValidatedNel[Err,T] =
@@ -298,27 +312,228 @@ package object dsl
   }
 
 
-  implicit class ValidatedTuple3Ops[Err,A,B,C](
-    val vs: Tuple3[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C]]
-  ) extends AnyVal
+  implicit class ValidatedTuple3Ops[Err](
+    val vs: Tuple3[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
   {
     def errorsOr[T](t: => T): ValidatedNel[Err,T] =
       vs.mapN { case _: Product => t }
   }
 
 
-  implicit class ValidatedTuple4Ops[Err,A,B,C,D](
-    val vs: Tuple4[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C],ValidatedNel[Err,D]]
-  ) extends AnyVal
+  implicit class ValidatedTuple4Ops[Err](
+    val vs: Tuple4[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+      ]
+  )
+  extends AnyVal
   {
     def errorsOr[T](t: => T): ValidatedNel[Err,T] =
       vs.mapN { case _: Product => t }
   }
 
 
-  implicit class ValidatedTuple5Ops[Err,A,B,C,D,E](
-    val vs: Tuple5[ValidatedNel[Err,A],ValidatedNel[Err,B],ValidatedNel[Err,C],ValidatedNel[Err,D],ValidatedNel[Err,E]]
-  ) extends AnyVal
+  implicit class ValidatedTuple5Ops[Err](
+    val vs: Tuple5[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+  implicit class ValidatedTuple6Ops[Err](
+    val vs: Tuple6[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+  implicit class ValidatedTuple7Ops[Err](
+    val vs: Tuple7[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+      ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+  implicit class ValidatedTuple8Ops[Err](
+    val vs: Tuple8[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+  implicit class ValidatedTuple9Ops[Err](
+    val vs: Tuple9[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+  implicit class ValidatedTuple10Ops[Err](
+    val vs: Tuple10[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+  implicit class ValidatedTuple11Ops[Err](
+    val vs: Tuple11[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+
+  implicit class ValidatedTuple12Ops[Err](
+    val vs: Tuple12[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+  implicit class ValidatedTuple13Ops[Err](
+    val vs: Tuple13[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
+  {
+    def errorsOr[T](t: => T): ValidatedNel[Err,T] =
+      vs.mapN { case _: Product => t }
+  }
+
+  implicit class ValidatedTuple14Ops[Err](
+    val vs: Tuple14[
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_],
+      ValidatedNel[Err,_]
+    ]
+  )
+  extends AnyVal
   {
     def errorsOr[T](t: => T): ValidatedNel[Err,T] =
       vs.mapN { case _: Product => t }
