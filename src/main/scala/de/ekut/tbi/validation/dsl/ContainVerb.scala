@@ -25,6 +25,10 @@ object anyOf
   def apply[U](u1: U, u2: U, us: U*): AnyOfWord[U] = {
     new AnyOfWord[U]{ val values = (u1 +: u2 +: us).toSet }
   }
+
+  def apply[U](us: Set[U]): AnyOfWord[U] = {
+    new AnyOfWord[U]{ val values = us }
+  }
 }
 
 
@@ -37,6 +41,10 @@ object allOf
 {
   def apply[U](u1: U, u2: U, us: U*): AllOfWord[U] = {
     new AllOfWord[U]{ val values = (u1 +: u2 +: us).toSet }
+  }
+
+  def apply[U](us: Set[U]): AllOfWord[U] = {
+    new AllOfWord[U]{ val values = us }
   }
 }
 
@@ -62,6 +70,10 @@ object noneOf
 {
   def apply[U](u1: U, u2: U, us: U*): NoneOfWord[U] = {
     new NoneOfWord[U]{ val values = (u1 +: u2 +: us).toSet }
+  }
+
+  def apply[U](us: Set[U]): NoneOfWord[U] = {
+    new NoneOfWord[U]{ val values = us }
   }
 }
 

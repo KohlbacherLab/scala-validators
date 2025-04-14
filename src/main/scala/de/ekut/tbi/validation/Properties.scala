@@ -1,8 +1,10 @@
 package de.ekut.tbi.validation
 
 
-
-import cats.data.Validated
+import cats.data.{
+  NonEmptyList,
+  Validated
+}
 import cats.data.Validated.condNel
 
 
@@ -140,6 +142,13 @@ object CanContain
       def contains(c: C[T])(t: T) = c.exists(_ == t)
 
       def containsOnly(c: C[T])(t: T): Boolean = c.forall(_ == t)
+    }
+
+  implicit def nelContains[T]: CanContain[T,NonEmptyList[T]] =
+    new CanContain[T,NonEmptyList[T]]{
+      def contains(nel: NonEmptyList[T])(t: T) = nel.exists(_ == t)
+
+      def containsOnly(nel: NonEmptyList[T])(t: T): Boolean = nel.forall(_ == t)
     }
 
   import scala.util.Either

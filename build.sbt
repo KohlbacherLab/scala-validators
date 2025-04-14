@@ -3,7 +3,7 @@
 
 name := "validators"
 ThisBuild / organization := "de.ekut.tbi"
-ThisBuild / scalaVersion := "2.13.13"
+ThisBuild / scalaVersion := "2.13.16"
 ThisBuild / version      := "1.0-SNAPSHOT"
 
 
@@ -17,7 +17,7 @@ lazy val root = project.in(file("."))
     libraryDependencies ++= Seq(
       "org.scalatest"  %% "scalatest"  % "3.2.18" % Test,
       "org.typelevel"  %% "cats-core"  % "2.10.0",
-      "com.chuusai"    %% "shapeless"  % "2.3.10",
+      "com.chuusai"    %% "shapeless"  % "2.3.13",
    )
  )
 
