@@ -6,6 +6,7 @@ import cats.data.{
   Validated
 }
 import cats.data.Validated.condNel
+import scala.language.reflectiveCalls
 
 
 sealed trait Unconstrained[-T]
@@ -16,6 +17,168 @@ object Unconstrained
 }
 
 
+trait CanBeDefined[-T] extends (T => Boolean)
+
+object CanBeDefined
+{
+
+  type HasDefinedMethod = AnyRef { def isDefined: Boolean }
+
+  def apply[T](implicit cbd: CanBeDefined[T]) = cbd
+
+  implicit def hasDefinedMethod[T <: HasDefinedMethod]: CanBeDefined[T] =
+    new CanBeDefined[T]{
+      override def apply(t: T) = t.asInstanceOf[HasDefinedMethod].isDefined
+    }
+
+}
+
+
+trait CanBeSuccess[-T] extends (T => Boolean)
+
+object CanBeSuccess
+{
+
+  type HasSuccessMethod = AnyRef { def isSuccess: Boolean }
+
+  def apply[T](implicit cbd: CanBeSuccess[T]) = cbd
+
+  implicit def hasMethodIsSuccess[T <: HasSuccessMethod]: CanBeSuccess[T] =
+    new CanBeSuccess[T]{
+      override def apply(t: T) = t.asInstanceOf[HasSuccessMethod].isSuccess
+    }
+
+  implicit def validatedSuccess[E,T]: CanBeSuccess[Validated[E,T]] =
+    new CanBeSuccess[Validated[E,T]]{
+      override def apply(v: Validated[E,T]) = v.isValid
+    }
+}
+
+
+trait CanBeEmpty[-T] extends (T => Boolean)
+
+object CanBeEmpty
+{
+
+  type HasEmptyMethod = AnyRef { def isEmpty: Boolean }
+
+  def apply[T](implicit cbd: CanBeEmpty[T]) = cbd
+
+  implicit def hasIsEmpty[T <: HasEmptyMethod]: CanBeEmpty[T] =
+    new CanBeEmpty[T]{
+      override def apply(t: T) = t.asInstanceOf[HasEmptyMethod].isEmpty
+    }
+
+  implicit def hasParameterlessIsEmpty[T <: AnyRef { def isEmpty(): Boolean }]: CanBeEmpty[T] =
+    new CanBeEmpty[T]{
+      override def apply(t: T) = t.asInstanceOf[{ def isEmpty(): Boolean }].isEmpty()
+    }
+
+}
+
+
+trait CanContain[T,-C]{
+  self =>
+
+  def contains(c: C)(t: T): Boolean
+
+  def containsOnly(c: C)(t: T): Boolean
+
+  def containsAnyOf(c: C)(ts: Set[T]): Boolean =
+    ts.exists(t => self.contains(c)(t))
+
+  def containsAllOf(c: C)(ts: Set[T]): Boolean =
+    ts.forall(t => self.contains(c)(t))
+
+}
+
+
+object CanContain
+{
+  def apply[T,C](implicit cc: CanContain[T,C]) = cc
+
+  implicit def optionContains[T]: CanContain[T,Option[T]] =
+    new CanContain[T,Option[T]]{
+      def contains(opt: Option[T])(t: T) = opt.contains(t)
+
+      def containsOnly(opt: Option[T])(t: T): Boolean = opt.contains(t)
+    }
+
+  implicit val stringContainsChar: CanContain[Char,String] =
+    new CanContain[Char,String]{
+      def contains(s: String)(ch: Char) = s.contains(ch)
+
+      def containsOnly(s: String)(t: Char): Boolean =
+        s.forall(_ == t)
+    }
+
+  implicit def stringContainsCharSequence[Chars <: CharSequence]: CanContain[Chars,String] =
+    new CanContain[Chars,String]{
+      def contains(s: String)(ch: Chars) = s.contains(ch)
+
+      def containsOnly(c: String)(t: Chars): Boolean = {
+        val s = t.toString
+
+        if (s.length == 1) c.forall(_ == s.head)
+        else c contentEquals s
+
+      }
+    }
+
+  implicit def iterableContains[T,C[X] <: Iterable[X]]: CanContain[T,C[T]] =
+    new CanContain[T,C[T]]{
+      def contains(c: C[T])(t: T) = c.exists(_ == t)
+
+      def containsOnly(c: C[T])(t: T): Boolean = c.forall(_ == t)
+    }
+
+  implicit def nelContains[T]: CanContain[T,NonEmptyList[T]] =
+    new CanContain[T,NonEmptyList[T]]{
+      def contains(nel: NonEmptyList[T])(t: T) = nel.exists(_ == t)
+
+      def containsOnly(nel: NonEmptyList[T])(t: T): Boolean = nel.forall(_ == t)
+    }
+
+  import scala.util.Either
+
+  implicit def eitherContains[A,B]: CanContain[B,Either[A,B]] =
+    new CanContain[B,Either[A,B]]{
+      def contains(either: Either[A,B])(t: B) = either.contains(t)
+
+      def containsOnly(either: Either[A,B])(t: B): Boolean = either.contains(t)
+    }
+
+}
+
+
+trait CanHaveSize[-C]{
+  def sizeOf(c: C): Int
+
+  def hasSize(c: C)(size: Int): Boolean = sizeOf(c) == size
+}
+
+object CanHaveSize
+{
+
+  def apply[C](implicit cc: CanHaveSize[C]) = cc
+
+  implicit def hasSize[C <: { def size: Int }]: CanHaveSize[C] =
+    new CanHaveSize[C]{
+      def sizeOf(c: C): Int =
+        c.asInstanceOf[{ def size: Int }].size
+
+    }
+
+  implicit def charSeqSize[Chars <: CharSequence]: CanHaveSize[Chars] =
+    new CanHaveSize[Chars]{
+      def sizeOf(chars: Chars): Int =
+        chars.length
+    }
+
+}
+
+
+/*
 trait CanBeDefined[-T]{
   def isDefined(t: T): Boolean
 }
@@ -192,3 +355,4 @@ object CanHaveSize
     }
 
 }
+*/

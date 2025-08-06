@@ -23,7 +23,7 @@ sealed trait SuccessWord extends NegatableValidatorBuilder[String,CanBeSuccess]
 
   def apply[T](implicit cbd: CanBeSuccess[T]): NegatableValidator[String,T] =
     Validator[String,T](
-      cbd.isSuccess(_)
+      cbd(_)
     )(
       t => s"$t is not success",
       t => s"$t is success"

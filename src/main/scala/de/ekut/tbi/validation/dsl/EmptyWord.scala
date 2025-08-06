@@ -23,7 +23,7 @@ sealed trait EmptyWord extends NegatableValidatorBuilder[String,CanBeEmpty]
 
   def apply[T](implicit cbe: CanBeEmpty[T]): NegatableValidator[String,T] =
     Validator[String,T](
-      cbe.isEmpty(_)
+      cbe(_)
     )(
       t => s"$t is not empty",
       t => s"$t is empty"

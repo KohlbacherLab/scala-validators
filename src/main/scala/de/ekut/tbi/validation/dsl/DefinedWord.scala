@@ -23,7 +23,7 @@ sealed trait DefinedWord extends NegatableValidatorBuilder[String,CanBeDefined]
 
   def apply[T](implicit cbd: CanBeDefined[T]): NegatableValidator[String,T] =
     Validator[String,T](
-      cbd.isDefined(_)
+      cbd(_)
     )(
       t => s"$t is not defined",
       t => s"$t is defined"
