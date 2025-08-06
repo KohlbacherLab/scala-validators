@@ -1,10 +1,14 @@
-
+import scala.util.Properties.envOrElse
 
 
 name := "validators"
 ThisBuild / organization := "de.ekut.tbi"
 ThisBuild / scalaVersion := "2.13.16"
-ThisBuild / version      := "1.0-SNAPSHOT"
+ThisBuild / version      := envOrElse("VERSION","1.0.0")
+
+val ownerRepo  = envOrElse("REPOSITORY","KohlbacherLab/scala-validators").split("/")
+ThisBuild / githubOwner      := ownerRepo(0)
+ThisBuild / githubRepository := ownerRepo(1)
 
 
 //-----------------------------------------------------------------------------
