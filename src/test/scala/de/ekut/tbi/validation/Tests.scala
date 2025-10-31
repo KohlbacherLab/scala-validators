@@ -76,6 +76,7 @@ class Tests extends AnyFlatSpec
     assertValid(oneToTen must not (contain (8) and (contain (11))))
 
     assertValid(oneToTen must (contain (11) or (have (size (lessThan(11))))))
+
     assertValid(oneToTen must (have (size (lessThan(11))) or (contain (11))))
 
     assertValid(oneToTen must not (contain (11) or (contain (12))))
@@ -87,10 +88,18 @@ class Tests extends AnyFlatSpec
     assertValid(all(oneToTen.toList) must not (be (negative)))
 
     assertValid(all(Range(0,10,2).toList) must be (even))
+
     assertValid(all(Range(0,10,2).toList) must not (be (odd)))
     
     assertValid(all(Range(1,11,2).toList) must be (odd))
+
     assertValid(all(Range(1,11,2).toList) must not (be (even)))
+
+    assertValid(any(oneToTen.toList) must (be (even)))
+
+    assertValid(any(oneToTen.toList) must (be (odd)))
+
+    assertValid(atLeast(2,true,false,true,false) must be (false))
 
   }
 
@@ -110,7 +119,6 @@ class Tests extends AnyFlatSpec
     assertValid(-3 must not (be (even) or (be (positive))))
 
     assertValid(4 must (be (positive) and (be (even))))
-
 
     assertValid(4 must be (equalTo (4)))
 

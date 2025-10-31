@@ -39,19 +39,38 @@ package object dsl
   implicit def toSubject[T](t: T): Subject[T] =
     new Subject(t)
 
-
-  def all[T,C[T]: Traverse](ts: C[T]): TraversableSubject[T,C] =
-    new TraversableSubject(ts)
-
-  def all[T](t1: T, t2: T, ts: T*): TraversableSubject[T,List] =
-    all((t1 +: t2 +: ts).toList)
-
-
   def valueIn[T](opt: Option[T]): OptionSubject[T] =
     OptionSubject(opt) 
 
   def option[T](opt: Option[T]): OptionSubject[T] =
     valueIn(opt)
+
+
+  def all[T,C[T]: Traverse](ts: C[T]): AllSubject[T,C] =
+    new AllSubject(ts)
+
+  def all[T](t1: T, t2: T, ts: T*): AllSubject[T,List] =
+    all((t1 +: t2 +: ts).toList)
+
+  def atLeast[T, C[X] <: Iterable[X]](n: Int, ts: C[T]): AtLeastSubject[T,C] =
+    new AtLeastSubject(n,ts)
+
+  def atLeast[T](n: Int, t1: T, t2: T, ts: T*): AtLeastSubject[T,List] =
+    atLeast(n, (t1 +: t2 +: ts).toList)
+
+  def any[T,C[X] <: Iterable[X]](ts: C[T]): AtLeastSubject[T,C] =
+    atLeast(1,ts)
+
+  def any[T](t1: T, t2: T, ts: T*): AtLeastSubject[T,List] =
+    atLeast(1,(t1 +: t2 +: ts).toList)
+
+/*  
+  def atMost[T, C[X] <: Iterable[X]](n: Int, ts: C[T]): AtMostSubject[T,C] =
+    new AtMostSubject(n,ts)
+
+  def atMost[T](n: Int, t1: T, t2: T, ts: T*): AtMostSubject[T,List] =
+    atMost(n, (t1 +: t2 +: ts).toList)
+*/
 
 
   final val undefined =
@@ -67,6 +86,28 @@ package object dsl
     validator: Validator[E,T]
   ): ValidatedNel[E,Option[T]] =
     valueIn(opt) must validator
+
+
+  def unless[T,E](
+    cond: Boolean
+  )(
+    check: => ValidatedNel[E,T]
+  )(
+    default: => T
+  ): ValidatedNel[E,T] =
+    if (cond) default.validNel
+    else check
+
+
+  def unless[T,E](
+    t: T,
+    cond: T => Boolean
+  )(
+    check: T => ValidatedNel[E,T]
+  )(
+  ): ValidatedNel[E,T] =
+    if (cond(t)) t.validNel
+    else check(t)
 
 
   implicit class TraversableOps[T, C[T]: Traverse](val ts: C[T])
