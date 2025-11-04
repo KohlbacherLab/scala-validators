@@ -1,7 +1,6 @@
 package de.ekut.tbi.validation
 
 
-
 import cats.data.{
   NonEmptyList,
   Validated,
@@ -13,7 +12,6 @@ import cats.syntax.apply._
 import cats.syntax.either._
 import cats.syntax.validated._
 import cats.instances.list._
-
 import de.ekut.tbi.validation.{
   Validator,
   ValidatorBuilder
@@ -36,8 +34,8 @@ package object dsl
     ts.traverse(v)
 
   
-  implicit def toSubject[T](t: T): Subject[T] =
-    new Subject(t)
+  implicit def toSubject[T](t: T): SingleSubject[T] =
+    new SingleSubject(t)
 
   def valueIn[T](opt: Option[T]): OptionSubject[T] =
     OptionSubject(opt) 
@@ -45,7 +43,7 @@ package object dsl
   def option[T](opt: Option[T]): OptionSubject[T] =
     valueIn(opt)
 
-
+/*
   def all[T,C[T]: Traverse](ts: C[T]): AllSubject[T,C] =
     new AllSubject(ts)
 
@@ -62,6 +60,27 @@ package object dsl
     atLeast(1,ts)
 
   def any[T](t1: T, t2: T, ts: T*): AtLeastSubject[T,List] =
+    atLeast(1,(t1 +: t2 +: ts).toList)
+*/
+
+  import MultiSubject._
+
+  def all[T,C[T]: Traverse](ts: C[T]): Subject[T,C[T]] =
+    MultiSubject(ts,All[C]())
+
+  def all[T](t1: T, t2: T, ts: T*): Subject[T,List[T]] =
+    all((t1 +: t2 +: ts).toList)
+
+  def atLeast[T, C[X] <: Iterable[X]](n: Int, ts: C[T]): Subject[T,C[T]] =
+    MultiSubject(ts,AtLeast(n))
+
+  def atLeast[T](n: Int, t1: T, t2: T, ts: T*): Subject[T,List[T]] =
+    atLeast(n, (t1 +: t2 +: ts).toList)
+
+  def any[T,C[X] <: Iterable[X]](ts: C[T]): Subject[T,C[T]] =
+    atLeast(1,ts)
+
+  def any[T](t1: T, t2: T, ts: T*): Subject[T,List[T]] =
     atLeast(1,(t1 +: t2 +: ts).toList)
 
 /*  

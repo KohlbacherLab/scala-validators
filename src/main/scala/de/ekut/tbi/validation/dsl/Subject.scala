@@ -17,7 +17,7 @@ import de.ekut.tbi.validation.{
 }
 
 
-sealed trait SubjectOps[T,R]
+sealed trait Subject[T,R]
 {
 
   def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]): ValidatedNel[Any,R]
@@ -34,8 +34,13 @@ sealed trait SubjectOps[T,R]
 
 }
 
+object Subject
+{
+  def apply[T](t: T) = SingleSubject(t)
+}
 
-final case class Subject[T](t: T) extends SubjectOps[T,T]
+
+final case class SingleSubject[T](t: T) extends Subject[T,T]
 {
 
   override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) =
@@ -61,10 +66,13 @@ final case class Subject[T](t: T) extends SubjectOps[T,T]
 }
 
 
-final case class OptionSubject[T] private[dsl](val opt: Option[T]) extends SubjectOps[T,Option[T]]
+final case class OptionSubject[T] private[dsl](val opt: Option[T]) extends Subject[T,Option[T]]
 {
 
-  private def check[E,Tpr](t: Option[Tpr],validator: Validator[E,Tpr]) =
+  private def check[E,Tpr](
+    t: Option[Tpr],
+    validator: Validator[E,Tpr]
+  ) =
     t.map(validator(_).map(Some(_)))
      .getOrElse(None.validNel[E])
 
@@ -93,7 +101,92 @@ final case class OptionSubject[T] private[dsl](val opt: Option[T]) extends Subje
 }
 
 
-final case class AllSubject[T,C[T]: Traverse] private[dsl](ts: C[T]) extends SubjectOps[T,C[T]]
+object MultiSubject
+{
+
+  sealed trait Check[C[_]]
+  {
+    def apply[E,T](ts: C[T], validator: Validator[E,T]): ValidatedNel[E,C[T]]
+  }
+
+  final case class All[C[_]: Traverse]() extends Check[C]
+  {
+    override def apply[E,T](ts: C[T], validator: Validator[E,T]) =
+      ts.traverse(validator)
+  }
+
+  final case class AtLeast[C[x] <: Iterable[x]](n: Int) extends Check[C]
+  {
+    override def apply[E,T](ts: C[T], validator: Validator[E,T]) = {
+
+      val (valids,invalids) = ts.map(validator).partition(_.isValid)
+      
+      (valids.size >= n) match {
+      
+        case true => ts.validNel
+      
+        case false =>
+          implicit lazy val sg = Semigroup.instance[T]((t1,t2) => t2)
+      
+          invalids.reduce(_ combine _).map(_ => ts)
+      }
+    }
+  }
+
+  final case class AtMost[C[x] <: Iterable[x]](n: Int) extends Check[C]
+  {
+    override def apply[E,T](ts: C[T], validator: Validator[E,T]) = {
+
+      val (valids,invalids) = ts.map(validator).partition(_.isValid)
+      
+      (valids.size <= n) match {
+      
+        case true => ts.validNel
+      
+        case false =>
+          implicit lazy val sg = Semigroup.instance[T]((t1,t2) => t2)
+      
+          invalids.reduce(_ combine _).map(_ => ts)
+      }
+    }
+  }
+
+}
+
+
+final case class MultiSubject[T,C[_]] private[dsl](
+  ts: C[T],
+  private val check: MultiSubject.Check[C]
+)
+extends Subject[T,C[T]]
+{
+
+  def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) = 
+    check(ts,beClause.apply[T])
+
+  def must[E](be: Validator[E,T]) =
+    check(ts,be)
+
+  def must(regexMatch: Validator[String,String])(implicit str: T =:= String) =
+    check(ts.asInstanceOf[C[String]],regexMatch)
+
+  def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
+    check(ts,containClause.apply[T])
+
+  def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
+    check(ts,clause.apply[T])
+
+  def must[E,LC[_],RC[_]](junction: NegatableVBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+    check(ts,junction.apply[T])
+
+  def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
+    check(ts,junction.apply[T])
+
+}
+
+
+/*
+final case class AllSubject[T,C[T]: Traverse] private[dsl](ts: C[T]) extends Subject[T,C[T]]
 {
 
   override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) =
@@ -120,7 +213,7 @@ final case class AllSubject[T,C[T]: Traverse] private[dsl](ts: C[T]) extends Sub
 }
 
 
-final case class AtLeastSubject[T,C[X] <: Iterable[X]] private[dsl](n: Int, ts: C[T]) extends SubjectOps[T,C[T]]
+final case class AtLeastSubject[T,C[X] <: Iterable[X]] private[dsl](n: Int, ts: C[T]) extends Subject[T,C[T]]
 {
 
   private def check[E,Tpr](ts: C[Tpr], validator: Validator[E,Tpr]) = {
@@ -162,48 +255,5 @@ final case class AtLeastSubject[T,C[X] <: Iterable[X]] private[dsl](n: Int, ts: 
     check(ts,junction.apply[T])
 
 }
-
-/*
-final case class AtMostSubject[T,C[X] <: Iterable[X]] private[dsl](n: Int, ts: C[T]) extends SubjectOps[T,C[T]]
-{
-
-  private def check[E,Tpr](ts: C[Tpr], validator: Validator[E,Tpr]) = {
-
-    val (valids,invalids) = ts.map(validator).partition(_.isValid)
-
-    (valids.size <= n) match {
-
-      case true => ts.validNel
-
-      case false =>
-        implicit lazy val sg = Semigroup.instance[Tpr]((t1,t2) => t2)
-
-        invalids.reduce(_ combine _).map(_ => ts)
-    }
-
-  }
-
-
-  override def must[C[_]](beClause: BeClause[C])(implicit constraint: beClause.Constraint[T]) = 
-    check(ts,beClause.apply[T])
-
-  override def must[E](be: Validator[E,T]) =
-    check(ts,be)
-
-  def must(regexMatch: Validator[String,String])(implicit str: T =:= String) =
-    check(ts.asInstanceOf[C[String]],regexMatch)
-
-  override def must[U](containClause: ContainClause[U])(implicit cc: containClause.Constraint[T]) =
-    check(ts,containClause.apply[T])
-
-  override def must[C[_]](clause: HaveClause[C])(implicit cc: clause.Constraint[T]) =
-    check(ts,clause.apply[T])
-
-  override def must[E,LC[_],RC[_]](junction: NegatableVBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
-    check(ts,junction.apply[T])
-
-  override def must[E,LC[_],RC[_]](junction: VBJunction[E,LC,RC])(implicit lc: LC[T], rc: RC[T]) =
-    check(ts,junction.apply[T])
-
-}
 */
+
