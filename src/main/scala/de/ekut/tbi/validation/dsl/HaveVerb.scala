@@ -5,8 +5,8 @@ package de.ekut.tbi.validation.dsl
 import cats.data.Validated.condNel
 import cats.syntax.apply._
 import cats.instances.list._
-
 import de.ekut.tbi.validation.{
+  CanHaveDistinctElements,
   CanHaveSize,
   Validator,
   ValidatorBuilder,
@@ -50,6 +50,29 @@ object length
 }
 
 
+sealed trait DistinctElementsWord extends NegatableValidatorBuilder[String,CanHaveDistinctElements]
+{
+  self =>
+
+  type Type = DistinctElementsWord
+
+  def apply[T](implicit constraint: Constraint[T]) =
+     Validator[String,T](constraint)(
+       t => s"Not all elements in $t are distinct",
+       t => s"Elements in $t are distinct",
+     )
+
+  def negated =
+    new DistinctElementsWord {
+      override def apply[T: Constraint]: NegatableValidator[String,T] = self.apply[T].negated
+      override def negated = self
+    }
+
+}
+
+final object distinctElements extends DistinctElementsWord
+
+
 sealed trait HaveClause[C[_]] extends NegatableValidatorBuilder[String,C]
 {
   self =>
@@ -84,6 +107,11 @@ sealed trait HaveVerb
         )
     }
 
+  def apply(word: DistinctElementsWord): HaveClause[word.Constraint] =
+    new HaveClause[word.Constraint]{
+      def apply[T: word.Constraint] =
+        word.apply[T]
+    }
 }
 
 final object have extends HaveVerb

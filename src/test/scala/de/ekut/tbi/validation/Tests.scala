@@ -6,6 +6,7 @@ import java.util.UUID.randomUUID
 import java.time._
 import scala.util.Try
 import org.scalatest.flatspec.AnyFlatSpec
+import cats.data.NonEmptyList
 import cats.data.Validated
 import cats.instances.list._
 import cats.instances.option._
@@ -91,6 +92,22 @@ class Tests extends AnyFlatSpec
     
     assertValid(all(Range(1,11,2).toList) must be (odd))
     assertValid(all(Range(1,11,2).toList) must not (be (even)))
+  }
+
+
+  "Distinct element validations" must "work as expected" in {
+
+    assertValid(List(1,2,3,4,5) must (have (distinctElements)))
+
+    assertValid(List(1,2,1,3,4,5) must not (have (distinctElements)))
+
+    assertInvalid(List(1,2,1,3,4,5) must (have (distinctElements)))
+
+    assertValid(Set(1,2,1,3,4,5) must (have (distinctElements)))
+
+    assertInvalid(Set(1,2,3,4,5) must not (have (distinctElements)))
+
+    assertValid(NonEmptyList.of(1,2,3,4,5) must (have (distinctElements)))
 
   }
 
