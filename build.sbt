@@ -3,7 +3,7 @@ import scala.util.Properties.envOrElse
 
 name := "validators"
 ThisBuild / organization := "de.ekut.tbi"
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "2.13.18"
 ThisBuild / version      := envOrElse("VERSION","1.0.0")
 
 val ownerRepo  = envOrElse("REPOSITORY","KohlbacherLab/scala-validators").split("/")
@@ -20,7 +20,7 @@ lazy val root = project.in(file("."))
   .settings(
     libraryDependencies ++= Seq(
       "org.scalatest"  %% "scalatest"  % "3.2.18" % Test,
-      "org.typelevel"  %% "cats-core"  % "2.10.0",
+      "org.typelevel"  %% "cats-core"  % "2.13.0",
       "com.chuusai"    %% "shapeless"  % "2.3.13",
    )
  )
